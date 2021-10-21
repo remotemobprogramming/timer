@@ -1,7 +1,8 @@
 package sh.mob.timer;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -29,14 +30,42 @@ public class RoomApiController {
   public Flux<ServerSentEvent<String>> subscribeToEvents(@PathVariable String roomId) {
     var room = roomRepository.get(roomId);
 
+    AtomicReference<Duration> durationBefore = new AtomicReference<>();
+
     return Flux.interval(Duration.ofMillis(250L))
-        .map(
-            sequence ->
-                ServerSentEvent.<String>builder()
-                    .id(String.valueOf(sequence))
-                    .event("TIMER_UPDATE")
-                    .data("" + room.timeLeft())
-                    .build());
+        .flatMap(
+            sequence -> {
+              var durationLeft = room.timeLeft();
+              var timerUpdate = timerUpdate(sequence, durationLeft);
+
+              var wasNotZeroBefore = durationBefore.get() == null || !durationBefore.get().isZero();
+              durationBefore.set(durationLeft);
+
+              if (durationLeft.isZero() && wasNotZeroBefore) {
+                System.out.println("DURATION ZERO");
+                return Flux.fromStream(Stream.of(timerUpdate, timerFinished(sequence)));
+              } else if (durationLeft.isZero()) {
+                return Flux.empty();
+              } else {
+                return Flux.fromStream(Stream.of(timerUpdate));
+              }
+            });
+  }
+
+  private static ServerSentEvent<String> timerUpdate(Long sequence, Duration durationLeft) {
+    return ServerSentEvent.<String>builder()
+        .id(String.valueOf(sequence))
+        .event("TIMER_UPDATE")
+        .data("" + durationLeft)
+        .build();
+  }
+
+  private static ServerSentEvent<String> timerFinished(Long sequence) {
+    return ServerSentEvent.<String>builder()
+        .id(String.valueOf(sequence))
+        .event("TIMER_FINISHED")
+        .data("finished")
+        .build();
   }
 
   @PutMapping("/{roomId}")

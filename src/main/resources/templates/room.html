@@ -10,6 +10,7 @@
    <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
    <div id="timer"></div>
 
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
    <script type="text/javascript">
      // Declare an EventSource
      let url = '/best/sse';
@@ -27,6 +28,12 @@
      eventSource.addEventListener('TIMER_UPDATE', (e) => {
        console.log('TIMER_UPDATE');
        timerDiv.innerHTML = e.data;
+     });
+     eventSource.addEventListener('TIMER_FINISHED', (e) => {
+       console.log('TIMER_FINISHED');
+       new Howl({
+         src: ['/mobnext.mp3']
+       }).play();
      });
    </script>
  </ul>

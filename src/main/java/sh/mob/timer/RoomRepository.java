@@ -39,7 +39,14 @@ public class RoomRepository {
 
       var lastTimerRequest = timerRequests.get(timerRequests.size() - 1);
       var lastTimerRequestedTimestamp = lastTimerRequest.requested;
-      return Duration.between(Instant.now(), lastTimerRequestedTimestamp.plus(lastTimerRequest.timer(), ChronoUnit.MINUTES));
+      var result = Duration.between(Instant.now(),
+          lastTimerRequestedTimestamp.plus(lastTimerRequest.timer(), ChronoUnit.MINUTES));
+
+      if(result.isNegative()) {
+        return Duration.ZERO;
+      }
+
+      return result;
     }
 
     public String name() {
