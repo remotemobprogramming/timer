@@ -31,6 +31,13 @@
      });
      eventSource.addEventListener('TIMER_FINISHED', (e) => {
        console.log('TIMER_FINISHED');
+       Notification.requestPermission();
+       new Notification('mob next', {
+         tag: 'timer-finished',
+         silent: false,
+         body: "Time's up.",
+         lang: 'en',
+       })
        new Howl({
          src: ['/mobnext.mp3']
        }).play();
