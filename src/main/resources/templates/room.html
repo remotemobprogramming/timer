@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Room [[${room.name}]]</title>
+</head>
+<body>
+ <h1>Room [[${room.name}]]</h1>
+ <ul>
+   <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
+   <div id="timer"></div>
+
+   <script type="text/javascript">
+     // Declare an EventSource
+     let url = '/best/sse';
+     console.log('setting up event source at ' + url);
+     const eventSource = new EventSource(url);
+     // Handler for events without an event type specified
+     eventSource.onopen = () => {
+       console.log('open');
+     };
+     eventSource.onerror = (e) => {
+       console.log('onerror');
+     };
+
+     var timerDiv = document.getElementById('timer');
+     eventSource.addEventListener('TIMER_UPDATE', (e) => {
+       console.log('TIMER_UPDATE');
+       timerDiv.innerHTML = e.data;
+     });
+   </script>
+ </ul>
+</body>
+</html>
