@@ -3,9 +3,12 @@ package sh.mob.timer;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,7 +30,10 @@ public class RoomApiController {
 
   @GetMapping
   @RequestMapping(value = "/{roomId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<String>> subscribeToEvents(@PathVariable String roomId) {
+  public Flux<ServerSentEvent<String>> subscribeToEvents(@PathVariable String roomId,
+      ServerHttpResponse response) {
+    response.getHeaders().setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+    response.getHeaders().add("X-Accel-Buffering", "no");
     var room = roomRepository.get(roomId);
 
     AtomicReference<Duration> durationBefore = new AtomicReference<>();
