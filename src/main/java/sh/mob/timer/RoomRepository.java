@@ -28,8 +28,8 @@ public class RoomRepository {
       this.name = name;
     }
 
-    public void add(Long timer) {
-      timerRequests.add(new TimerRequest(timer, Instant.now()));
+    public void add(Long timer, String user) {
+      timerRequests.add(new TimerRequest(timer, Instant.now(), user));
     }
 
     public Duration timeLeft() {
@@ -49,6 +49,10 @@ public class RoomRepository {
       return result;
     }
 
+    public List<String> team() {
+      return timerRequests().stream().map(TimerRequest::user).distinct().sorted().toList();
+    }
+
     public String name() {
       return name;
     }
@@ -58,5 +62,5 @@ public class RoomRepository {
     }
   }
 
-  record TimerRequest(Long timer, Instant requested) {}
+  record TimerRequest(Long timer, Instant requested, String user) {}
 }

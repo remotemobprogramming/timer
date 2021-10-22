@@ -36,18 +36,21 @@ public class RoomApiController {
         .flatMap(
             sequence -> {
               var durationLeft = room.timeLeft();
-              var timerUpdate = timerUpdate(sequence, durationLeft);
+              boolean isFirstInterval = durationBefore.get() == null;
 
-              var wasNotZeroBefore = durationBefore.get() == null || !durationBefore.get().isZero();
+              var wasNotZeroBefore = isFirstInterval || !durationBefore.get().isZero();
               durationBefore.set(durationLeft);
 
-              if (durationLeft.isZero() && wasNotZeroBefore) {
+              if (isFirstInterval && durationLeft.isZero()) {
+                return Flux.fromStream(Stream.of(timerUpdate(sequence, durationLeft)));
+              } else if (durationLeft.isZero() && wasNotZeroBefore) {
                 System.out.println("DURATION ZERO");
-                return Flux.fromStream(Stream.of(timerUpdate, timerFinished(sequence)));
+                return Flux.fromStream(
+                    Stream.of(timerUpdate(sequence, durationLeft), timerFinished(sequence)));
               } else if (durationLeft.isZero()) {
                 return Flux.empty();
               } else {
-                return Flux.fromStream(Stream.of(timerUpdate));
+                return Flux.fromStream(Stream.of(timerUpdate(sequence, durationLeft)));
               }
             });
   }
@@ -72,9 +75,9 @@ public class RoomApiController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void publishEvent(@PathVariable String roomId, @RequestBody TimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
-    room.add(timerRequest.timer());
+    room.add(timerRequest.timer(), timerRequest.user());
     System.out.println("timerRequest = " + timerRequest);
   }
 
-  record TimerRequest(Long timer) {}
+  record TimerRequest(Long timer, String user) {}
 }

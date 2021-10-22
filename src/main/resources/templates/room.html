@@ -6,8 +6,7 @@
 </head>
 <body>
  <h1>Room [[${room.name}]]</h1>
- <ul>
-   <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
+
    <div id="timer"></div>
 
    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
@@ -43,6 +42,15 @@
        }).play();
      });
    </script>
+ <h2>Timer Requests</h2>
+ <ul>
+   <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
  </ul>
+
+ <h2>Team</h2>
+ <ul>
+   <li th:each="user:${room.team()}">[[${user}]]</li>
+ </ul>
+
 </body>
 </html>
