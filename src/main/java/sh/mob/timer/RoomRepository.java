@@ -20,6 +20,14 @@ public class RoomRepository {
     return repository.computeIfAbsent(room, Room::new);
   }
 
+  public long count() {
+    return repository.size();
+  }
+
+  public long countUsers() {
+    return repository.values().stream().mapToLong(room -> room.team().size()).sum();
+  }
+
   static final class Room {
 
     private final String name;
