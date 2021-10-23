@@ -34,6 +34,7 @@ public class RoomApiController {
       ServerHttpResponse response) {
     response.getHeaders().setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
     response.getHeaders().add("X-Accel-Buffering", "no");
+    response.getHeaders().setConnection("keep-alive");
     var room = roomRepository.get(roomId);
 
     AtomicReference<Duration> durationBefore = new AtomicReference<>();
