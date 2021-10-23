@@ -1,5 +1,6 @@
 package sh.mob.timer.web;
 
+import java.util.Objects;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +29,40 @@ public class IndexController {
 
   @PostMapping
   public String post(@ModelAttribute Form form) {
-    return "redirect:/%s".formatted(form.room());
+    return String.format("redirect:/%s", form.room());
   }
 
-  public record Form (String room) {}
+  public static final class Form {
+
+    private final String room;
+
+    public Form(String room) {
+      this.room = room;
+    }
+
+    public String room() {
+      return room;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this)
+        return true;
+      if (obj == null || obj.getClass() != this.getClass())
+        return false;
+      var that = (Form) obj;
+      return Objects.equals(this.room, that.room);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(room);
+    }
+
+    @Override
+    public String toString() {
+      return "Form[" +
+          "room=" + room + ']';
+    }
+  }
 }

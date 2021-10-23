@@ -5,7 +5,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 final class Room {
 
@@ -40,10 +42,66 @@ final class Room {
     return new TimeLeft(result, timer, lastTimerRequestedTimestamp, lastTimerRequest.user());
   }
 
-  public record TimeLeft(Duration duration, Long timer, Instant requested, String name) {}
+  public static final class TimeLeft {
+
+    private final Duration duration;
+    private final Long timer;
+    private final Instant requested;
+    private final String name;
+
+    public TimeLeft(Duration duration, Long timer, Instant requested, String name) {
+      this.duration = duration;
+      this.timer = timer;
+      this.requested = requested;
+      this.name = name;
+    }
+
+    public Duration duration() {
+      return duration;
+    }
+
+    public Long timer() {
+      return timer;
+    }
+
+    public Instant requested() {
+      return requested;
+    }
+
+    public String name() {
+      return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this)
+        return true;
+      if (obj == null || obj.getClass() != this.getClass())
+        return false;
+      var that = (TimeLeft) obj;
+      return Objects.equals(this.duration, that.duration) &&
+          Objects.equals(this.timer, that.timer) &&
+          Objects.equals(this.requested, that.requested) &&
+          Objects.equals(this.name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(duration, timer, requested, name);
+    }
+
+    @Override
+    public String toString() {
+      return "TimeLeft[" +
+          "duration=" + duration + ", " +
+          "timer=" + timer + ", " +
+          "requested=" + requested + ", " +
+          "name=" + name + ']';
+    }
+  }
 
   public List<String> team() {
-    return timerRequests().stream().map(TimerRequest::user).distinct().sorted().toList();
+    return timerRequests().stream().map(TimerRequest::user).distinct().sorted().collect(Collectors.toList());
   }
 
   public String name() {
@@ -54,5 +112,53 @@ final class Room {
     return Collections.unmodifiableList(timerRequests);
   }
 
-  record TimerRequest(Long timer, Instant requested, String user) {}
+  static final class TimerRequest {
+
+    private final Long timer;
+    private final Instant requested;
+    private final String user;
+
+    TimerRequest(Long timer, Instant requested, String user) {
+      this.timer = timer;
+      this.requested = requested;
+      this.user = user;
+    }
+
+    public Long timer() {
+      return timer;
+    }
+
+    public Instant requested() {
+      return requested;
+    }
+
+    public String user() {
+      return user;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this)
+        return true;
+      if (obj == null || obj.getClass() != this.getClass())
+        return false;
+      var that = (TimerRequest) obj;
+      return Objects.equals(this.timer, that.timer) &&
+          Objects.equals(this.requested, that.requested) &&
+          Objects.equals(this.user, that.user);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(timer, requested, user);
+    }
+
+    @Override
+    public String toString() {
+      return "TimerRequest[" +
+          "timer=" + timer + ", " +
+          "requested=" + requested + ", " +
+          "user=" + user + ']';
+    }
+  }
 }

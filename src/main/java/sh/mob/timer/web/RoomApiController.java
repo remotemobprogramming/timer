@@ -1,6 +1,7 @@
 package sh.mob.timer.web;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
@@ -67,13 +68,10 @@ public class RoomApiController {
     String data =
         timeLeft.timer() == null
             ? "00:00"
-            : "%d:%d (%d min timer started by %s at %s)"
-                .formatted(
-                    timeLeft.duration().toMinutesPart(),
-                    timeLeft.duration().toSecondsPart(),
-                    timeLeft.timer(),
-                    timeLeft.name(),
-                    timeLeft.requested().toString());
+            : String.format(
+                "%02d:%02d",
+                timeLeft.duration().toMinutesPart(),
+                timeLeft.duration().toSecondsPart());
     return ServerSentEvent.<String>builder()
         .id(String.valueOf(sequence))
         .event("TIMER_UPDATE")
@@ -97,5 +95,40 @@ public class RoomApiController {
     System.out.println("timerRequest = " + timerRequest);
   }
 
-  record TimerRequest(Long timer, String user) {}
+  static final class TimerRequest {
+
+    private final Long timer;
+    private final String user;
+
+    TimerRequest(Long timer, String user) {
+      this.timer = timer;
+      this.user = user;
+    }
+
+    public Long timer() {
+      return timer;
+    }
+
+    public String user() {
+      return user;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      if (obj == null || obj.getClass() != this.getClass()) return false;
+      var that = (TimerRequest) obj;
+      return Objects.equals(this.timer, that.timer) && Objects.equals(this.user, that.user);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(timer, user);
+    }
+
+    @Override
+    public String toString() {
+      return "TimerRequest[" + "timer=" + timer + ", " + "user=" + user + ']';
+    }
+  }
 }
