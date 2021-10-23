@@ -1,10 +1,8 @@
-package sh.mob.timer;
+package sh.mob.timer.web;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-import org.springframework.http.CacheControl;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import sh.mob.timer.web.Room.TimeLeft;
 
 @RestController
 @RequestMapping()
@@ -30,43 +29,55 @@ public class RoomApiController {
 
   @GetMapping
   @RequestMapping(value = "/{roomId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<String>> subscribeToEvents(@PathVariable String roomId,
-      ServerHttpResponse response) {
-    response.getHeaders().setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  public Flux<ServerSentEvent<String>> subscribeToEvents(
+      @PathVariable String roomId, ServerHttpResponse response) {
+    response
+        .getHeaders()
+        .setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
     response.getHeaders().add("X-Accel-Buffering", "no");
     response.getHeaders().setConnection("keep-alive");
     var room = roomRepository.get(roomId);
 
-    AtomicReference<Duration> durationBefore = new AtomicReference<>();
+    var durationBefore = new AtomicReference<Duration>();
 
     return Flux.interval(Duration.ofMillis(250L))
         .flatMap(
             sequence -> {
-              var durationLeft = room.timeLeft();
+              var timeLeft = room.timeLeft();
+              var durationLeft = timeLeft.duration();
               boolean isFirstInterval = durationBefore.get() == null;
 
               var wasNotZeroBefore = isFirstInterval || !durationBefore.get().isZero();
               durationBefore.set(durationLeft);
 
               if (isFirstInterval && durationLeft.isZero()) {
-                return Flux.fromStream(Stream.of(timerUpdate(sequence, durationLeft)));
+                return Flux.fromStream(Stream.of(timerUpdate(sequence, timeLeft)));
               } else if (durationLeft.isZero() && wasNotZeroBefore) {
-                System.out.println("DURATION ZERO");
                 return Flux.fromStream(
-                    Stream.of(timerUpdate(sequence, durationLeft), timerFinished(sequence)));
+                    Stream.of(timerUpdate(sequence, timeLeft), timerFinished(sequence)));
               } else if (durationLeft.isZero()) {
                 return Flux.empty();
               } else {
-                return Flux.fromStream(Stream.of(timerUpdate(sequence, durationLeft)));
+                return Flux.fromStream(Stream.of(timerUpdate(sequence, timeLeft)));
               }
             });
   }
 
-  private static ServerSentEvent<String> timerUpdate(Long sequence, Duration durationLeft) {
+  private static ServerSentEvent<String> timerUpdate(Long sequence, TimeLeft timeLeft) {
+    String data =
+        timeLeft.timer() == null
+            ? "00:00"
+            : "%d:%d (%d min timer started by %s at %s)"
+                .formatted(
+                    timeLeft.duration().toMinutesPart(),
+                    timeLeft.duration().toSecondsPart(),
+                    timeLeft.timer(),
+                    timeLeft.name(),
+                    timeLeft.requested().toString());
     return ServerSentEvent.<String>builder()
         .id(String.valueOf(sequence))
         .event("TIMER_UPDATE")
-        .data("" + durationLeft)
+        .data(data)
         .build();
   }
 

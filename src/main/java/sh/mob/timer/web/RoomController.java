@@ -1,4 +1,4 @@
-package sh.mob.timer;
+package sh.mob.timer.web;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +16,7 @@ public class RoomController {
   }
 
   @GetMapping
-  @RequestMapping("/{roomId}")
+  @RequestMapping(value = "/{roomId}")
   public String get(@PathVariable String roomId, Model model) {
     model.addAttribute("room", roomRepository.get(roomId));
     return "room";

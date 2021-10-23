@@ -1,14 +1,15 @@
-package sh.mob.timer;
+package sh.mob.timer.web;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping({"/", ""})
 public class IndexController {
 
   private final RoomRepository roomRepository;
@@ -19,15 +20,16 @@ public class IndexController {
 
   @GetMapping
   public String index(Model model) {
-    System.out.println("INDEX");
     model.addAttribute("numberOfRooms", roomRepository.count());
     model.addAttribute("numberOfUsers", roomRepository.countUsers());
+    model.addAttribute("numberOfConnections", 0);
     return "index";
   }
 
   @PostMapping
-  public String post(@RequestParam("room") String room) {
-    System.out.println("POST");
-    return "redirect:/" + room;
+  public String post(@ModelAttribute Form form) {
+    return "redirect:/%s".formatted(form.room());
   }
+
+  public record Form (String room) {}
 }
