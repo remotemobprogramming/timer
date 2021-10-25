@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import sh.mob.timer.web.Room.TimerRequest.TimerType;
 
 final class Room {
 
@@ -19,7 +20,11 @@ final class Room {
   }
 
   public void add(Long timer, String user) {
-    timerRequests.add(new TimerRequest(timer, Instant.now(), user));
+    timerRequests.add(new TimerRequest(timer, Instant.now(), user, TimerType.TIMER));
+  }
+
+  public void addBreaktimer(Long breaktimer, String user) {
+    timerRequests.add(new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER));
   }
 
   public TimeLeft timeLeft() {
@@ -74,15 +79,13 @@ final class Room {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj == this)
-        return true;
-      if (obj == null || obj.getClass() != this.getClass())
-        return false;
+      if (obj == this) return true;
+      if (obj == null || obj.getClass() != this.getClass()) return false;
       var that = (TimeLeft) obj;
-      return Objects.equals(this.duration, that.duration) &&
-          Objects.equals(this.timer, that.timer) &&
-          Objects.equals(this.requested, that.requested) &&
-          Objects.equals(this.name, that.name);
+      return Objects.equals(this.duration, that.duration)
+          && Objects.equals(this.timer, that.timer)
+          && Objects.equals(this.requested, that.requested)
+          && Objects.equals(this.name, that.name);
     }
 
     @Override
@@ -92,16 +95,28 @@ final class Room {
 
     @Override
     public String toString() {
-      return "TimeLeft[" +
-          "duration=" + duration + ", " +
-          "timer=" + timer + ", " +
-          "requested=" + requested + ", " +
-          "name=" + name + ']';
+      return "TimeLeft["
+          + "duration="
+          + duration
+          + ", "
+          + "timer="
+          + timer
+          + ", "
+          + "requested="
+          + requested
+          + ", "
+          + "name="
+          + name
+          + ']';
     }
   }
 
   public List<String> team() {
-    return timerRequests().stream().map(TimerRequest::user).distinct().sorted().collect(Collectors.toList());
+    return timerRequests().stream()
+        .map(TimerRequest::user)
+        .distinct()
+        .sorted()
+        .collect(Collectors.toList());
   }
 
   public String name() {
@@ -114,14 +129,21 @@ final class Room {
 
   static final class TimerRequest {
 
+    enum TimerType {
+      TIMER,
+      BREAKTIMER
+    }
+
     private final Long timer;
     private final Instant requested;
     private final String user;
+    private final TimerType type;
 
-    TimerRequest(Long timer, Instant requested, String user) {
+    TimerRequest(Long timer, Instant requested, String user, TimerType type) {
       this.timer = timer;
       this.requested = requested;
       this.user = user;
+      this.type = type;
     }
 
     public Long timer() {
@@ -136,29 +158,41 @@ final class Room {
       return user;
     }
 
+    public TimerType type() {
+      return type;
+    }
+
     @Override
     public boolean equals(Object obj) {
-      if (obj == this)
-        return true;
-      if (obj == null || obj.getClass() != this.getClass())
-        return false;
+      if (obj == this) return true;
+      if (obj == null || obj.getClass() != this.getClass()) return false;
       var that = (TimerRequest) obj;
-      return Objects.equals(this.timer, that.timer) &&
-          Objects.equals(this.requested, that.requested) &&
-          Objects.equals(this.user, that.user);
+      return Objects.equals(this.timer, that.timer)
+          && Objects.equals(this.requested, that.requested)
+          && Objects.equals(this.user, that.user)
+          && this.type == that.type;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(timer, requested, user);
+      return Objects.hash(timer, requested, user, type);
     }
 
     @Override
     public String toString() {
-      return "TimerRequest[" +
-          "timer=" + timer + ", " +
-          "requested=" + requested + ", " +
-          "user=" + user + ']';
+      return "TimerRequest["
+          + "timer="
+          + timer
+          + ", "
+          + "requested="
+          + requested
+          + ", "
+          + "user="
+          + user
+          + ", "
+          + "type="
+          + type
+          + ']';
     }
   }
 }

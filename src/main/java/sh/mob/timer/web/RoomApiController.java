@@ -70,8 +70,7 @@ public class RoomApiController {
             ? "00:00"
             : String.format(
                 "%02d:%02d",
-                timeLeft.duration().toMinutesPart(),
-                timeLeft.duration().toSecondsPart());
+                timeLeft.duration().toMinutesPart(), timeLeft.duration().toSecondsPart());
     return ServerSentEvent.<String>builder()
         .id(String.valueOf(sequence))
         .event("TIMER_UPDATE")
@@ -91,22 +90,31 @@ public class RoomApiController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void publishEvent(@PathVariable String roomId, @RequestBody TimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
-    room.add(timerRequest.timer(), timerRequest.user());
-    System.out.println("timerRequest = " + timerRequest);
+    if (timerRequest.timer() != null) {
+      room.add(timerRequest.timer(), timerRequest.user());
+    } else if (timerRequest.breaktimer() != null) {
+      room.addBreaktimer(timerRequest.breaktimer(), timerRequest.user());
+    }
   }
 
   static final class TimerRequest {
 
     private final Long timer;
+    private final Long breaktimer;
     private final String user;
 
-    TimerRequest(Long timer, String user) {
+    TimerRequest(Long timer, Long breaktimer, String user) {
       this.timer = timer;
       this.user = user;
+      this.breaktimer = breaktimer;
     }
 
     public Long timer() {
       return timer;
+    }
+
+    public Long breaktimer() {
+      return breaktimer;
     }
 
     public String user() {
@@ -118,17 +126,28 @@ public class RoomApiController {
       if (obj == this) return true;
       if (obj == null || obj.getClass() != this.getClass()) return false;
       var that = (TimerRequest) obj;
-      return Objects.equals(this.timer, that.timer) && Objects.equals(this.user, that.user);
+      return Objects.equals(this.timer, that.timer)
+          && Objects.equals(this.breaktimer, that.breaktimer)
+          && Objects.equals(this.user, that.user);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(timer, user);
+      return Objects.hash(timer, breaktimer, user);
     }
 
     @Override
     public String toString() {
-      return "TimerRequest[" + "timer=" + timer + ", " + "user=" + user + ']';
+      return "TimerRequest["
+          + "timer="
+          + timer
+          + ", "
+          + "breaktimer="
+          + breaktimer
+          + ", "
+          + "user="
+          + user
+          + ']';
     }
   }
 }
