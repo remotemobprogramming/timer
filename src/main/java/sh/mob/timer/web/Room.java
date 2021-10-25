@@ -8,23 +8,33 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import reactor.core.publisher.Sinks;
 import sh.mob.timer.web.Room.TimerRequest.TimerType;
 
 final class Room {
 
   private final String name;
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
+  private final Sinks.Many<TimerRequest> sink = Sinks.many().replay().latest();
 
   Room(String name) {
     this.name = name;
   }
 
   public void add(Long timer, String user) {
-    timerRequests.add(new TimerRequest(timer, Instant.now(), user, TimerType.TIMER));
+    TimerRequest timerRequest = new TimerRequest(timer, Instant.now(), user, TimerType.TIMER);
+    timerRequests.add(timerRequest);
+    sink.tryEmitNext(timerRequest);
   }
 
   public void addBreaktimer(Long breaktimer, String user) {
-    timerRequests.add(new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER));
+    TimerRequest timerRequest = new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER);
+    timerRequests.add(timerRequest);
+    sink.tryEmitNext(timerRequest);
+  }
+
+  public Sinks.Many<TimerRequest> sink() {
+    return sink;
   }
 
   public TimeLeft timeLeft() {
@@ -34,17 +44,17 @@ final class Room {
 
     var lastTimerRequest = timerRequests.get(timerRequests.size() - 1);
     var lastTimerRequestedTimestamp = lastTimerRequest.requested;
-    var timer = lastTimerRequest.timer();
+    var timer = lastTimerRequest.getTimer();
     var result =
         Duration.between(
             Instant.now(), lastTimerRequestedTimestamp.plus(timer, ChronoUnit.MINUTES));
 
     if (result.isNegative()) {
       return new TimeLeft(
-          Duration.ZERO, timer, lastTimerRequestedTimestamp, lastTimerRequest.user());
+          Duration.ZERO, timer, lastTimerRequestedTimestamp, lastTimerRequest.getUser());
     }
 
-    return new TimeLeft(result, timer, lastTimerRequestedTimestamp, lastTimerRequest.user());
+    return new TimeLeft(result, timer, lastTimerRequestedTimestamp, lastTimerRequest.getUser());
   }
 
   public static final class TimeLeft {
@@ -113,7 +123,7 @@ final class Room {
 
   public List<String> team() {
     return timerRequests().stream()
-        .map(TimerRequest::user)
+        .map(TimerRequest::getUser)
         .distinct()
         .sorted()
         .collect(Collectors.toList());
@@ -127,7 +137,7 @@ final class Room {
     return Collections.unmodifiableList(timerRequests);
   }
 
-  static final class TimerRequest {
+  public static final class TimerRequest {
 
     enum TimerType {
       TIMER,
@@ -146,19 +156,19 @@ final class Room {
       this.type = type;
     }
 
-    public Long timer() {
+    public Long getTimer() {
       return timer;
     }
 
-    public Instant requested() {
+    public Instant getRequested() {
       return requested;
     }
 
-    public String user() {
+    public String getUser() {
       return user;
     }
 
-    public TimerType type() {
+    public TimerType getType() {
       return type;
     }
 

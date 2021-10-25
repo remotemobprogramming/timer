@@ -24,8 +24,8 @@ public class RoomRepository {
     return repository.size();
   }
 
-  public long countUsers() {
-    return repository.values().stream().mapToLong(room -> room.team().size()).sum();
+  public long countConnections() {
+    return repository.values().stream().mapToLong(room -> room.sink().currentSubscriberCount()).sum();
   }
 
 }

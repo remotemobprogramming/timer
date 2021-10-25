@@ -23,8 +23,7 @@ public class IndexController {
   @GetMapping
   public String index(Model model) {
     model.addAttribute("numberOfRooms", roomRepository.count());
-    model.addAttribute("numberOfUsers", roomRepository.countUsers());
-    model.addAttribute("numberOfConnections", 0);
+    model.addAttribute("numberOfConnections", roomRepository.countConnections());
     model.addAttribute("url", url);
     return "index";
   }
@@ -36,5 +35,13 @@ public class IndexController {
 
   static class Form {
     public String room;
+
+    public String getRoom() {
+      return room;
+    }
+
+    public void setRoom(String room) {
+      this.room = room;
+    }
   }
 }

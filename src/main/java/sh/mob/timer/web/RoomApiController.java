@@ -29,6 +29,27 @@ public class RoomApiController {
   }
 
   @GetMapping
+  @RequestMapping(value = "/{roomId}/sse2", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<Room.TimerRequest>> subscribeToEvents2(
+      @PathVariable String roomId, ServerHttpResponse response) {
+    response
+        .getHeaders()
+        .setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+    response.getHeaders().add("X-Accel-Buffering", "no");
+    response.getHeaders().setConnection("keep-alive");
+    var room = roomRepository.get(roomId);
+
+    return room.sink()
+        .asFlux()
+        .map(
+            timerRequest ->
+                ServerSentEvent.<Room.TimerRequest>builder()
+                    .event("TIMER_REQUEST")
+                    .data(timerRequest)
+                    .build());
+  }
+
+  @GetMapping
   @RequestMapping(value = "/{roomId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<String>> subscribeToEvents(
       @PathVariable String roomId, ServerHttpResponse response) {

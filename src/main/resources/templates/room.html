@@ -17,13 +17,23 @@
   </header>
 
   <div class="text-center mb-5">
-   <div id="timer" class="display-1 font-monospace">00:00</div>
+   <div class="display-1">
+     <span id="timer-type"></span>
+     <span id="timer" class="font-monospace">00:00</span>
+   </div>
+
+    <div>
+     <span id="timer-user" class="text-muted"></span>
+     <span id="timer-duration" class="text-muted"></span>
+     <span id="timer-requested" class="text-muted"></span>
+    </div>
+
     <div class="progress" style="height: 1px;">
-      <div class="progress-bar" role="progressbar" style="width: 50%;"></div>
+      <div class="progress-bar" role="progressbar" id="progressbar" style="width: 0%;"></div>
     </div>
   </div>
 
-  <div class="mb-5">
+  <div class="mb-5" id="help">
     <pre>
       # first, configure your local system ...
       export MOB_TIMER_ROOM=[[${room.name}]]
@@ -45,20 +55,10 @@
         <div class="card-body">
           <h5 class="card-title">History</h5>
           <p class="card-text">
-          <ul>
+          <ul id="history">
             <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
           </ul>
           </p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Team</h5>
-          <ul>
-            <li th:each="user:${room.team()}">[[${user}]]</li>
-          </ul>
         </div>
       </div>
     </div>
@@ -70,27 +70,34 @@
     Notification.requestPermission();
   </script>
   <script type="text/javascript">
-    // Declare an EventSource
-    let url = '/[[${room.name}]]/sse';
-    console.log('setting up event source at ' + url);
-    const eventSource = new EventSource(url);
-    // Handler for events without an event type specified
-    eventSource.onopen = () => {
-      console.log('open');
-    };
-    eventSource.onerror = (e) => {
-      console.log('onerror');
-      console.log(e);
-    };
-
     var timerDiv = document.getElementById('timer');
-    eventSource.addEventListener('TIMER_UPDATE', (e) => {
-      console.log('TIMER_UPDATE');
-      timerDiv.innerHTML = e.data;
-      document.title = e.data;
-    });
-    eventSource.addEventListener('TIMER_FINISHED', (e) => {
-      console.log('TIMER_FINISHED');
+    function updateRemainingTime(data) {
+      document.title = data;
+      timerDiv.innerHTML = data;
+    }
+
+    var timerUserDiv = document.getElementById('timer-user');
+    function updateTimerUser(data) {
+      timerUserDiv.innerHTML = data;
+    }
+
+    var timerDurationDiv = document.getElementById('timer-duration');
+    function updateTimerDuration(data) {
+      timerDurationDiv.innerHTML = data + " minutes";
+    }
+
+    var timerTypeDiv = document.getElementById('timer-type');
+    function updateTimerType(data) {
+      timerTypeDiv.innerHTML = data;
+    }
+
+    var timerRequestedDiv = document.getElementById('timer-requested');
+    function updateTimerRequested(data) {
+
+      timerRequestedDiv.innerHTML = data;
+    }
+
+    function timerFinished() {
       Notification.requestPermission();
       new Notification('mob next', {
         tag: 'timer-finished',
@@ -101,6 +108,91 @@
       new Howl({
         src: ['/mobnext.mp3']
       }).play();
+    }
+
+
+    let url = '/[[${room.name}]]/sse';
+    console.log('setting up event source at ' + url);
+    const eventSource = new EventSource(url);
+    eventSource.addEventListener('TIMER_UPDATE', (e) => {
+      console.log('TIMER_UPDATE');
+      //updateRemainingTime(e.data);
+    });
+    eventSource.addEventListener('TIMER_FINISHED', (e) => {
+      console.log('TIMER_FINISHED');
+      timerFinished();
+    });
+
+    let url2 = '/[[${room.name}]]/sse2';
+    console.log('setting up event source at ' + url2);
+    const eventSource2 = new EventSource(url2);
+    eventSource2.onopen = () => {
+      console.log('open');
+    };
+    eventSource2.onerror = (e) => {
+      console.log('onerror');
+      console.log(e);
+      console.log(e.data);
+    };
+
+    function addLeadingZero(num) {
+      return (num < 10 ? '0' : '') + num;
+    }
+
+    let progressbarElement = document.getElementById("progressbar");
+
+    var requestedTimestamp;
+    var timerDuration;
+    function timer() {
+      setTimeout(function () {
+        if (requestedTimestamp !== undefined) {
+          var elapsedSinceRequested = Date.now() - requestedTimestamp;
+          if (elapsedSinceRequested < timerDuration) {
+            var remainingDuration = timerDuration - elapsedSinceRequested;
+            let remainingSeconds = Math.floor(remainingDuration / 1000);
+            let remainingMinutes = Math.floor(remainingSeconds / 60);
+            let remainingSecondsPart = remainingSeconds % 60;
+            updateRemainingTime(
+                addLeadingZero(remainingMinutes)
+                + ':'
+                + addLeadingZero(remainingSecondsPart)
+            );
+            let percentage = 100 - Math.max(0, Math.min(100, Math.floor(elapsedSinceRequested / timerDuration * 100)));
+            progressbarElement.style = "width: " + percentage + "%";
+          } else {
+            updateRemainingTime('00:00');
+            progressbarElement.style = "width: " + 0 + "%";
+          }
+        }
+        timer();
+      }, 50);
+    }
+    timer();
+
+    eventSource2.addEventListener('TIMER_REQUEST', (e) => {
+      // hide help text
+      document.getElementById('help').style.display = 'none'
+
+      console.log('TIMER_REQUEST');
+      console.log(e.data);
+      var request = JSON.parse(e.data);
+      console.log(request);
+
+      updateTimerUser(request.user)
+      updateTimerDuration(request.timer)
+      if (request.type === 'TIMER') {
+        updateTimerType('💻')
+      } else if (request.type === 'BREAKTIMER') {
+        updateTimerType('☕')
+      } else {
+        updateTimerType('')
+      }
+
+      updateTimerRequested(request.requested);
+
+
+      requestedTimestamp = Date.parse(request.requested);
+      timerDuration = request.timer * 60 * 1000;
     });
   </script>
 </body>
