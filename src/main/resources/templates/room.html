@@ -28,6 +28,7 @@
      <span id="timer-duration" class="text-muted"></span>
      <span id="timer-user" class="text-muted"></span>
      <span id="timer-requested" class="text-muted"></span>
+     <span id="timer-finished" class="text-muted"></span>
     </div>
 
     <div class="progress" style="height: 1px;">
@@ -35,34 +36,32 @@
     </div>
   </div>
 
-  <div class="mb-5" id="help">
-    <pre>
-      # first, configure your local system ...
-      export MOB_TIMER_ROOM=[[${room.name}]]
 
-      # ... and then happy collaborating!
-      mob start 10
 
-      # You can always start a timer via
-      mob timer 10
+  <div class="row justify-content-center">
+    <div class="col-6 mb-3" id="help">
+        <h5>Help</h5>
+          <pre>
+# first, configure your local system ...
+export MOB_TIMER_ROOM=[[${room.name}]]
 
-      # or have a 5 minute coffee break with
-      mob break 5
+# ... and then happy collaborating!
+mob start 10
+
+# You can always start a timer via
+mob timer 10
+
+# or have a 5 minute coffee break with
+mob break 5
     </pre>
+    </div>
   </div>
 
-  <div class="row">
-    <div class="col-sm-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">History</h5>
-          <p class="card-text">
-          <ul id="history">
-
-          </ul>
-          </p>
-        </div>
-      </div>
+  <div class="row justify-content-center">
+    <div class="col-6" id="history-col">
+        <h5>History</h5>
+        <ul id="history" class="list-unstyled">
+        </ul>
     </div>
   </div>
 
@@ -72,6 +71,31 @@
     Notification.requestPermission();
   </script>
   <script type="text/javascript">
+
+    function addLeadingZero(num) {
+      return (num < 10 ? '0' : '') + num;
+    }
+
+    function getCountdownRemainingTimeString(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested) {
+      var remainingDurationInMilliseconds = timerDurationInMilliseconds - elapsedMillisecondsSinceRequested;
+      let remainingSeconds = Math.floor(remainingDurationInMilliseconds / 1000);
+      let remainingMinutesPart = Math.floor(remainingSeconds / 60);
+      let remainingSecondsPart = remainingSeconds % 60;
+      return `${addLeadingZero(remainingMinutesPart)}:${addLeadingZero(remainingSecondsPart)}`;
+    }
+
+    function getCountdownPercentage(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested) {
+      let percentage = elapsedMillisecondsSinceRequested / timerDurationInMilliseconds * 100;
+      return Math.max(0, Math.min(100, Math.floor(percentage)));
+    }
+
+    function formatTodayAware(timestamp) {
+      let date = new Date(timestamp);
+      return date.toLocaleDateString() === new Date().toLocaleDateString()
+          ? date.toLocaleTimeString()
+          : date.toLocaleString();
+    }
+
     var timerDiv = document.getElementById('timer');
     function updateRemainingTime(data) {
       document.title = data;
@@ -81,7 +105,7 @@
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
       if (data !== undefined) {
-        timerUserDiv.innerHTML = " 👤 " + data;
+        timerUserDiv.innerHTML = ` 👤 ${data}`;
       } else {
         timerUserDiv.innerHTML = "";
       }
@@ -89,7 +113,7 @@
 
     var timerDurationDiv = document.getElementById('timer-duration');
     function updateTimerDuration(data) {
-      timerDurationDiv.innerHTML = "⏲ ️" + data + " min";
+      timerDurationDiv.innerHTML = `⏲ ${data} min`;
     }
 
     var timerTypeDiv = document.getElementById('timer-type');
@@ -100,9 +124,18 @@
     var timerRequestedDiv = document.getElementById('timer-requested');
     function updateTimerRequested(data) {
       if(data !== undefined) {
-      timerRequestedDiv.innerHTML = " 🕒 " + new Date(data).toLocaleString();
+        timerRequestedDiv.innerHTML = ` 🕒 ${(formatTodayAware(data))}`;
       } else {
       timerRequestedDiv.innerHTML = data;
+      }
+    }
+
+    var timerFinishedDiv = document.getElementById('timer-finished');
+    function updateTimerFinished(data) {
+      if(data !== undefined) {
+        timerFinishedDiv.innerHTML = ` 🏁 ${(formatTodayAware(data))}`;
+      } else {
+        timerFinishedDiv.innerHTML = data;
       }
     }
 
@@ -113,20 +146,15 @@
         silent: false,
         body: "Time's up.",
         lang: 'en',
-      })
+      });
       new Howl({
         src: ['/mobnext.mp3']
       }).play();
     }
 
-
     let url = '/[[${room.name}]]/sse';
     console.log('setting up event source at ' + url);
     const eventSource = new EventSource(url);
-    eventSource.addEventListener('TIMER_UPDATE', (e) => {
-      console.log('TIMER_UPDATE');
-      //updateRemainingTime(e.data);
-    });
     eventSource.addEventListener('TIMER_FINISHED', (e) => {
       console.log('TIMER_FINISHED');
       timerFinished();
@@ -144,43 +172,45 @@
       console.log(e.data);
     };
 
-    function addLeadingZero(num) {
-      return (num < 10 ? '0' : '') + num;
-    }
-
     let progressbarElement = document.getElementById("progressbar");
 
     var requestedTimestamp;
-    var timerDuration;
+    var timerDurationInMilliseconds;
+
     function timer() {
       setTimeout(function () {
         if (requestedTimestamp !== undefined) {
-          var elapsedSinceRequested = Date.now() - requestedTimestamp;
-          if (elapsedSinceRequested < timerDuration) {
-            var remainingDuration = timerDuration - elapsedSinceRequested;
-            let remainingSeconds = Math.floor(remainingDuration / 1000);
-            let remainingMinutes = Math.floor(remainingSeconds / 60);
-            let remainingSecondsPart = remainingSeconds % 60;
+          var elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
+          if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
             updateRemainingTime(
-                addLeadingZero(remainingMinutes)
-                + ':'
-                + addLeadingZero(remainingSecondsPart)
+                getCountdownRemainingTimeString(timerDurationInMilliseconds,
+                elapsedMillisecondsSinceRequested)
             );
-            let percentage = Math.max(0, Math.min(100, Math.floor(elapsedSinceRequested / timerDuration * 100)));
-            progressbarElement.style = "width: " + percentage + "%";
+            progressbarElement.style = `width: ${getCountdownPercentage(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested)}%`;
           } else {
             updateRemainingTime('00:00');
-            progressbarElement.style = "width: " + 0 + "%";
+            progressbarElement.style = "width: 0%";
           }
         }
+
         timer();
       }, 50);
     }
     timer();
 
+    function prependToHistory(newEntry) {
+      document.getElementById('history-col').style.display = 'block';
+
+      let historyElement = document.getElementById('history');
+      var current = historyElement.innerHTML.toString();
+      if (!current.includes(newEntry)) {
+        historyElement.innerHTML = newEntry + current;
+      }
+    }
+
     eventSource2.addEventListener('TIMER_REQUEST', (e) => {
       // hide help text
-      document.getElementById('help').style.display = 'none'
+      document.getElementById('help').style.display = 'none';
 
       console.log('TIMER_REQUEST');
       console.log(e.data);
@@ -198,21 +228,13 @@
       }
 
       updateTimerRequested(request.requested);
-
-
+      updateTimerFinished(Date.parse(request.requested) + (request.timer * 60 * 1000));
 
       requestedTimestamp = Date.parse(request.requested);
-      timerDuration = request.timer * 60 * 1000;
+      timerDurationInMilliseconds = request.timer * 60 * 1000;
 
-      let newEntry = '<li>'
-          + "🕒 " + new Date(request.requested).toLocaleString() + " "
-          + (request.type === "BREAKTIMER" ? "☕" : "⏲") + " ️" + request.timer + " min "
-          + "👤 " + request.user
-          + '</li>';
-      var current = document.getElementById('history').innerHTML.toString();
-      if(!current.includes(newEntry)) {
-         document.getElementById('history').innerHTML = newEntry + current;
-      }
+      prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} ${request.type
+      === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 👤 ${request.user}</li>`);
     });
   </script>
 </body>
