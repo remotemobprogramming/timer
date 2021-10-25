@@ -12,19 +12,21 @@
 <div class="col-lg-8 mx-auto p-3 py-md-5">
   <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
     <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-      <span class="fs-4">#[[${room.name}]]</span>
+      <span class="fs-4">Mob Timer</span>
     </a>
   </header>
 
   <div class="text-center mb-5">
+    #[[${room.name}]]
+
    <div class="display-1">
      <span id="timer-type"></span>
      <span id="timer" class="font-monospace">00:00</span>
    </div>
 
     <div>
-     <span id="timer-user" class="text-muted"></span>
      <span id="timer-duration" class="text-muted"></span>
+     <span id="timer-user" class="text-muted"></span>
      <span id="timer-requested" class="text-muted"></span>
     </div>
 
@@ -56,7 +58,7 @@
           <h5 class="card-title">History</h5>
           <p class="card-text">
           <ul id="history">
-            <li th:each="timerRequest:${room.timerRequests}">[[${timerRequest}]]</li>
+
           </ul>
           </p>
         </div>
@@ -78,12 +80,16 @@
 
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      timerUserDiv.innerHTML = data;
+      if (data !== undefined) {
+        timerUserDiv.innerHTML = " by " + data;
+      } else {
+        timerUserDiv.innerHTML = "";
+      }
     }
 
     var timerDurationDiv = document.getElementById('timer-duration');
     function updateTimerDuration(data) {
-      timerDurationDiv.innerHTML = data + " minutes";
+      timerDurationDiv.innerHTML = data + " min timer";
     }
 
     var timerTypeDiv = document.getElementById('timer-type');
@@ -93,8 +99,11 @@
 
     var timerRequestedDiv = document.getElementById('timer-requested');
     function updateTimerRequested(data) {
-
+      if(data !== undefined) {
+      timerRequestedDiv.innerHTML = " started at " + data;
+      } else {
       timerRequestedDiv.innerHTML = data;
+      }
     }
 
     function timerFinished() {
@@ -181,7 +190,7 @@
       updateTimerUser(request.user)
       updateTimerDuration(request.timer)
       if (request.type === 'TIMER') {
-        updateTimerType('💻')
+        updateTimerType('')
       } else if (request.type === 'BREAKTIMER') {
         updateTimerType('☕')
       } else {
@@ -191,8 +200,15 @@
       updateTimerRequested(request.requested);
 
 
+
       requestedTimestamp = Date.parse(request.requested);
       timerDuration = request.timer * 60 * 1000;
+
+      let newEntry = '<li>' + JSON.stringify(request) + '</li>';
+      var current = document.getElementById('history').innerHTML.toString();
+      if(!current.contains(newEntry)) {
+         document.getElementById('history').innerHTML = newEntry + current;
+      }
     });
   </script>
 </body>
