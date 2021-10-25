@@ -55,7 +55,7 @@ mob break 5
   </div>
 
   <div class="row justify-content-center">
-    <div class="col-6" id="history-col">
+    <div class="col-6" id="history-col" style="display: none">
         <h5>History</h5>
         <ul id="history" class="list-unstyled">
         </ul>
@@ -225,13 +225,13 @@ mob break 5
       }
 
       updateTimerRequested(request.requested);
-      updateTimerFinished(Date.parse(request.requested) + (request.timer * 60 * 1000));
+      let finished = Date.parse(request.requested) + (request.timer * 60 * 1000);
+      updateTimerFinished(finished);
 
       requestedTimestamp = Date.parse(request.requested);
       timerDurationInMilliseconds = request.timer * 60 * 1000;
 
-      prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} ${request.type
-      === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 👤 ${request.user}</li>`);
+      prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} 🏁 ${(formatTodayAware(finished))} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 👤 ${request.user}</li>`);
     });
   </script>
 </body>
