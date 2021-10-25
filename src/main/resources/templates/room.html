@@ -81,7 +81,7 @@
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
       if (data !== undefined) {
-        timerUserDiv.innerHTML = " by " + data;
+        timerUserDiv.innerHTML = " 👤 " + data;
       } else {
         timerUserDiv.innerHTML = "";
       }
@@ -89,7 +89,7 @@
 
     var timerDurationDiv = document.getElementById('timer-duration');
     function updateTimerDuration(data) {
-      timerDurationDiv.innerHTML = data + " min timer";
+      timerDurationDiv.innerHTML = "⏲ ️" + data + " min";
     }
 
     var timerTypeDiv = document.getElementById('timer-type');
@@ -100,7 +100,7 @@
     var timerRequestedDiv = document.getElementById('timer-requested');
     function updateTimerRequested(data) {
       if(data !== undefined) {
-      timerRequestedDiv.innerHTML = " started at " + data;
+      timerRequestedDiv.innerHTML = " 🕒 " + new Date(data).toLocaleString();
       } else {
       timerRequestedDiv.innerHTML = data;
       }
@@ -166,7 +166,7 @@
                 + ':'
                 + addLeadingZero(remainingSecondsPart)
             );
-            let percentage = 100 - Math.max(0, Math.min(100, Math.floor(elapsedSinceRequested / timerDuration * 100)));
+            let percentage = Math.max(0, Math.min(100, Math.floor(elapsedSinceRequested / timerDuration * 100)));
             progressbarElement.style = "width: " + percentage + "%";
           } else {
             updateRemainingTime('00:00');
@@ -204,7 +204,11 @@
       requestedTimestamp = Date.parse(request.requested);
       timerDuration = request.timer * 60 * 1000;
 
-      let newEntry = '<li>' + JSON.stringify(request) + '</li>';
+      let newEntry = '<li>'
+          + "🕒 " + new Date(request.requested).toLocaleString() + " "
+          + (request.type === "BREAKTIMER" ? "☕" : "⏲") + " ️" + request.timer + " min "
+          + "👤 " + request.user
+          + '</li>';
       var current = document.getElementById('history').innerHTML.toString();
       if(!current.includes(newEntry)) {
          document.getElementById('history').innerHTML = newEntry + current;
