@@ -206,7 +206,7 @@
 
       let newEntry = '<li>' + JSON.stringify(request) + '</li>';
       var current = document.getElementById('history').innerHTML.toString();
-      if(!current.contains(newEntry)) {
+      if(!current.includes(newEntry)) {
          document.getElementById('history').innerHTML = newEntry + current;
       }
     });
