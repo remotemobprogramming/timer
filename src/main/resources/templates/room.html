@@ -19,7 +19,7 @@
 <div class="col-lg-8 mx-auto p-3 py-md-5">
 
   <div class="text-center mb-5">
-    #[[${room.name}]]
+    #[[${room.name}]] <span id="audio-speaker" onclick="toggleAudio()"></span>
 
    <div class="display-1">
      <span id="timer-type"></span>
@@ -50,7 +50,7 @@
       </ul>
     </div>
     <div class="col-4">
-      <h5>History</h5>
+      <h5>History <small class="text-muted">24h ttl</small></h5>
       <ul id="history" class="list-unstyled">
       </ul>
     </div>
@@ -66,6 +66,26 @@
     Notification.requestPermission();
   </script>
   <script type="text/javascript">
+
+    function hasAudioEnabled() {
+      return localStorage.getItem('audio') === 'true';
+    }
+
+    function enableAudio() {
+      localStorage.setItem('audio', 'true');
+      document.getElementById('audio-speaker').innerHTML = '🔉'
+    }
+
+    function disableAudio() {
+      localStorage.setItem('audio', 'false');
+      document.getElementById('audio-speaker').innerHTML = '🔇'
+    }
+
+    function toggleAudio() {
+      hasAudioEnabled() ? disableAudio() : enableAudio();
+    }
+
+    hasAudioEnabled() ? enableAudio() : disableAudio();
 
     function addLeadingZero(num) {
       return (num < 10 ? '0' : '') + num;
@@ -99,12 +119,12 @@
 
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      timerUserDiv.innerHTML = data !== undefined ? ` 👤 ${data}` : '';
+      timerUserDiv.innerHTML = data !== null ? ` 👤 ${data}` : '';
     }
 
     var timerDurationDiv = document.getElementById('timer-duration');
     function updateTimerDuration(data) {
-      timerDurationDiv.innerHTML = `⏲ ${data} min`;
+      timerDurationDiv.innerHTML = data !== null ? `⏲ ${data} min` : '';
     }
 
     var timerTypeDiv = document.getElementById('timer-type');
@@ -114,10 +134,15 @@
 
     var timerFinishedDiv = document.getElementById('timer-finished');
     function updateTimerFinished(data) {
-      timerFinishedDiv.innerHTML = data !== undefined ? ` 🏁 ${(formatTodayAware(data))}` : data;
+      timerFinishedDiv.innerHTML = data !== null ? ` 🏁 ${(formatTodayAware(data))}` : '';
     }
 
     function checkAudioPlayback() {
+      if (!hasAudioEnabled()) {
+        document.getElementById('audio-interaction').style.display = 'none';
+        return;
+      }
+
       new Audio('/silence.mp3').play().then((e) => {
         console.log("audio working");
         document.getElementById('audio-interaction').style.display = 'none';
@@ -138,8 +163,10 @@
         lang: 'en',
       });
 
-      let audioFile = '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3');
-      new Audio(audioFile).play().then((e) => console.log("worked"), (e) => console.log("could not play " + e))
+      if (hasAudioEnabled()) {
+        let audioFile = '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3');
+        new Audio(audioFile).play().then((e) => console.log("worked"), (e) => console.log("could not play " + e))
+      }
     }
 
     let url2 = '/[[${room.name}]]/sse2';
@@ -154,16 +181,16 @@
 
     let progressbarElement = document.getElementById("progressbar");
 
-    var requestedTimestamp;
-    var timerDurationInMilliseconds;
+    var requestedTimestamp = null;
+    var timerDurationInMilliseconds = null;
     var isTimerRunning = false;
-    var requestType;
-    var requestUser;
-    var requestTimer;
+    var requestType = null;
+    var requestUser = null;
+    var requestTimer = null;
 
 
     function renderTimer() {
-      if (requestedTimestamp !== undefined) {
+      if (requestedTimestamp !== null) {
         var elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
         if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
           updateRemainingTime(
@@ -203,17 +230,38 @@
       }
     }
 
+    function clearHistory() {
+      document.getElementById('history').innerHTML = '';
+    }
+
     eventSource2.addEventListener('TIMER_REQUEST', (e) => {
       console.log('handling event TIMER_REQUEST ' + e.data);
       var request = JSON.parse(e.data);
 
-      updateTimerUser(request.user)
-      updateTimerDuration(request.timer)
-      updateTimerType(request.type)
+      if (request.timer === 0 && request.user === null) {
+        console.log('Resetting state');
 
+        requestedTimestamp = null
+        timerDurationInMilliseconds = null
+        requestType = null
+        requestUser = null
+        requestTimer = null
+
+        updateTimerFinished(null);
+        updateTimerUser(null);
+        updateTimerDuration(null);
+        updateTimerType(null);
+
+        clearHistory();
+
+        return;
+      }
 
       let finished = Date.parse(request.requested) + (request.timer * 60 * 1000);
       updateTimerFinished(finished);
+      updateTimerUser(request.user)
+      updateTimerDuration(request.timer)
+      updateTimerType(request.type)
 
       requestedTimestamp = Date.parse(request.requested);
       timerDurationInMilliseconds = request.timer * 60 * 1000;

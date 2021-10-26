@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import reactor.core.publisher.Sinks;
@@ -13,9 +14,11 @@ import sh.mob.timer.web.Room.TimerRequest.TimerType;
 
 final class Room {
 
+  public static final TimerRequest NULL_TIMER_REQUEST = new TimerRequest(0L, null, null, null);
   private final String name;
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
-  private final Sinks.Many<TimerRequest> sink = Sinks.many().replay().latest();
+  private final Sinks.Many<TimerRequest> sink =
+      Sinks.many().replay().latestOrDefault(NULL_TIMER_REQUEST);
 
   Room(String name) {
     this.name = name;
@@ -28,7 +31,8 @@ final class Room {
   }
 
   public void addBreaktimer(Long breaktimer, String user) {
-    TimerRequest timerRequest = new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER);
+    TimerRequest timerRequest =
+        new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }
@@ -37,24 +41,28 @@ final class Room {
     return sink;
   }
 
-  public TimeLeft timeLeft() {
+  Optional<TimerRequest> lastTimerRequest() {
     if (timerRequests.isEmpty()) {
-      return new TimeLeft(Duration.ZERO, null, null, null);
+      return Optional.empty();
     }
+    return Optional.of(timerRequests.get(timerRequests.size() - 1));
+  }
 
-    var lastTimerRequest = timerRequests.get(timerRequests.size() - 1);
-    var lastTimerRequestedTimestamp = lastTimerRequest.requested;
-    var timer = lastTimerRequest.getTimer();
-    var result =
-        Duration.between(
-            Instant.now(), lastTimerRequestedTimestamp.plus(timer, ChronoUnit.MINUTES));
-
-    if (result.isNegative()) {
-      return new TimeLeft(
-          Duration.ZERO, timer, lastTimerRequestedTimestamp, lastTimerRequest.getUser());
+  public void removeOldTimerRequests() {
+    this.timerRequests.removeIf(
+        timerRequest ->
+            Instant.now().minus(24, ChronoUnit.HOURS).isAfter(timerRequest.getRequested()));
+    if (timerRequests.isEmpty()) {
+      sink.tryEmitNext(NULL_TIMER_REQUEST);
     }
+  }
 
-    return new TimeLeft(result, timer, lastTimerRequestedTimestamp, lastTimerRequest.getUser());
+  boolean isEmpty() {
+    return lastTimerRequest().isEmpty();
+  }
+
+  boolean isUnused() {
+    return sink().currentSubscriberCount() == 0;
   }
 
   public static final class TimeLeft {

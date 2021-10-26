@@ -22,7 +22,6 @@ public class IndexController {
 
   @GetMapping
   public String index(Model model) {
-    model.addAttribute("numberOfRooms", roomRepository.count());
     model.addAttribute("numberOfConnections", roomRepository.countConnections());
     model.addAttribute("url", url);
     return "index";
