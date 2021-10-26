@@ -131,10 +131,10 @@
       console.log("Timer finished. Notifying user.");
 
       Notification.requestPermission();
-      new Notification('mob next', {
+      new Notification(requestUser + ' $ ' + (requestType === "TIMER" ? 'mob next' : 'mob start'), {
         tag: 'timer-finished',
-        silent: false,
-        body: "Time's up.",
+        body: requestTimer + " min timer is up.",
+        icon: '/favicon.ico',
         lang: 'en',
       });
 
@@ -158,6 +158,8 @@
     var timerDurationInMilliseconds;
     var isTimerRunning = false;
     var requestType;
+    var requestUser;
+    var requestTimer;
 
 
     function renderTimer() {
@@ -216,6 +218,8 @@
       requestedTimestamp = Date.parse(request.requested);
       timerDurationInMilliseconds = request.timer * 60 * 1000;
       requestType = request.type
+      requestUser = request.user
+      requestTimer = request.timer
 
       prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} 👤 ${request.user} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))}</li>`);
     });
