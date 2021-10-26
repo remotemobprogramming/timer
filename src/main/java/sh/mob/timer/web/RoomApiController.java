@@ -29,7 +29,7 @@ public class RoomApiController {
   }
 
   @GetMapping
-  @RequestMapping(value = "/{roomId}/sse2", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @RequestMapping(value = "/{roomId:[a-z0-9-]+}/sse2", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<Room.TimerRequest>> subscribeToEvents2(
       @PathVariable String roomId, ServerHttpResponse response) {
     response
@@ -50,7 +50,7 @@ public class RoomApiController {
   }
 
   @GetMapping
-  @RequestMapping(value = "/{roomId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @RequestMapping(value = "/{roomId:[a-z0-9-]+}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<String>> subscribeToEvents(
       @PathVariable String roomId, ServerHttpResponse response) {
     response
@@ -107,7 +107,7 @@ public class RoomApiController {
         .build();
   }
 
-  @PutMapping("/{roomId}")
+  @PutMapping("/{roomId:[a-z0-9-]+}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void publishEvent(@PathVariable String roomId, @RequestBody TimerRequest timerRequest) {
     var room = roomRepository.get(roomId);

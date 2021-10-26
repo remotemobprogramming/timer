@@ -16,7 +16,7 @@ public class RoomController {
   }
 
   @GetMapping
-  @RequestMapping(value = "/{roomId}")
+  @RequestMapping(value = "/{roomId:[a-z0-9-]+}")
   public String get(@PathVariable String roomId, Model model) {
     model.addAttribute("room", roomRepository.get(roomId));
     return "room";

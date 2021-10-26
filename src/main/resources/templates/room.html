@@ -34,7 +34,7 @@
 
   </div></div>
 
-
+<div class="alert alert-warning" id="audio-interaction" style="display: none;"><button onclick="checkAudioPlayback()">active audio output</button></div>
 
   <div class="row justify-content-center mb-3">
     <div class="col-4">
@@ -98,11 +98,7 @@
 
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      if (data !== undefined) {
-        timerUserDiv.innerHTML = ` 👤 ${data}`;
-      } else {
-        timerUserDiv.innerHTML = "";
-      }
+      timerUserDiv.innerHTML = data !== undefined ? ` 👤 ${data}` : '';
     }
 
     var timerDurationDiv = document.getElementById('timer-duration');
@@ -112,19 +108,27 @@
 
     var timerTypeDiv = document.getElementById('timer-type');
     function updateTimerType(data) {
-      timerTypeDiv.innerHTML = data;
+      timerTypeDiv.innerHTML = data === 'BREAKTIMER' ? '☕' : '';
     }
 
     var timerFinishedDiv = document.getElementById('timer-finished');
     function updateTimerFinished(data) {
-      if(data !== undefined) {
-        timerFinishedDiv.innerHTML = ` 🏁 ${(formatTodayAware(data))}`;
-      } else {
-        timerFinishedDiv.innerHTML = data;
-      }
+      timerFinishedDiv.innerHTML = data !== undefined ? ` 🏁 ${(formatTodayAware(data))}` : data;
+    }
+
+    function checkAudioPlayback() {
+      new Audio('/silence.mp3').play().then((e) => {
+        console.log("audio working");
+        document.getElementById('audio-interaction').style.display = 'none';
+      }, (e) => {
+        console.log("audio not working")
+        document.getElementById('audio-interaction').style.display = 'block';
+      })
     }
 
     function timerFinished() {
+      console.log("Timer finished. Notifying user.");
+
       Notification.requestPermission();
       new Notification('mob next', {
         tag: 'timer-finished',
@@ -132,52 +136,57 @@
         body: "Time's up.",
         lang: 'en',
       });
-      new Howl({
-        src: ['/mobnext.mp3']
-      }).play();
-    }
 
-    let url = '/[[${room.name}]]/sse';
-    console.log('setting up event source at ' + url);
-    const eventSource = new EventSource(url);
-    eventSource.addEventListener('TIMER_FINISHED', (e) => {
-      console.log('TIMER_FINISHED');
-      timerFinished();
-    });
+      let audioFile = '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3');
+      new Audio(audioFile).play().then((e) => console.log("worked"), (e) => console.log("could not play " + e))
+    }
 
     let url2 = '/[[${room.name}]]/sse2';
     console.log('setting up event source at ' + url2);
     const eventSource2 = new EventSource(url2);
     eventSource2.onopen = () => {
-      console.log('open');
+      console.log('opened connection to ' + url2);
     };
     eventSource2.onerror = (e) => {
-      console.log('onerror');
-      console.log(e);
-      console.log(e.data);
+      console.log('error on connection to ' + url2 + ": " + e.data);
     };
 
     let progressbarElement = document.getElementById("progressbar");
 
     var requestedTimestamp;
     var timerDurationInMilliseconds;
+    var isTimerRunning = false;
+    var requestType;
 
+
+    function renderTimer() {
+      if (requestedTimestamp !== undefined) {
+        var elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
+        if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
+          updateRemainingTime(
+              getCountdownRemainingTimeString(timerDurationInMilliseconds,
+                  elapsedMillisecondsSinceRequested)
+          );
+          progressbarElement.style = `width: ${getCountdownPercentage(timerDurationInMilliseconds,
+              elapsedMillisecondsSinceRequested)}%`;
+          isTimerRunning = true;
+        } else {
+          updateRemainingTime('00:00');
+          progressbarElement.style = "width: 0%";
+
+          if (isTimerRunning) {
+            timerFinished();
+          }
+
+          isTimerRunning = false;
+        }
+      }
+    }
+
+    // loop
     function timer() {
       setTimeout(function () {
-        if (requestedTimestamp !== undefined) {
-          var elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
-          if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
-            updateRemainingTime(
-                getCountdownRemainingTimeString(timerDurationInMilliseconds,
-                elapsedMillisecondsSinceRequested)
-            );
-            progressbarElement.style = `width: ${getCountdownPercentage(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested)}%`;
-          } else {
-            updateRemainingTime('00:00');
-            progressbarElement.style = "width: 0%";
-          }
-        }
-
+        renderTimer();
         timer();
       }, 50);
     }
@@ -192,29 +201,25 @@
     }
 
     eventSource2.addEventListener('TIMER_REQUEST', (e) => {
-      console.log('TIMER_REQUEST');
-      console.log(e.data);
+      console.log('handling event TIMER_REQUEST ' + e.data);
       var request = JSON.parse(e.data);
-      console.log(request);
 
       updateTimerUser(request.user)
       updateTimerDuration(request.timer)
-      if (request.type === 'TIMER') {
-        updateTimerType('')
-      } else if (request.type === 'BREAKTIMER') {
-        updateTimerType('☕')
-      } else {
-        updateTimerType('')
-      }
+      updateTimerType(request.type)
+
 
       let finished = Date.parse(request.requested) + (request.timer * 60 * 1000);
       updateTimerFinished(finished);
 
       requestedTimestamp = Date.parse(request.requested);
       timerDurationInMilliseconds = request.timer * 60 * 1000;
+      requestType = request.type
 
       prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} 👤 ${request.user} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))}</li>`);
     });
+
+    checkAudioPlayback();
   </script>
 
 <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>

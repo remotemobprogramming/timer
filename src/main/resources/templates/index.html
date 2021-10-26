@@ -27,10 +27,10 @@
 
     <div class="row justify-content-center mt-5 mb-5">
       <div class="col-md-6">
-    <form method="post">
-      <div class="input-group mb-3">
+    <form method="post" class="mb-3">
+      <div class="input-group">
         <span class="input-group-text" id="basic-addon3">[[${url}]]</span>
-        <input class="form-control" type="text" id="room" name="room" placeholder="room" required autofocus />
+        <input class="form-control" type="text" id="room" name="room" placeholder="room /[a-z0-9-]+/" required autofocus />
         <button type="submit" class="btn btn-primary">Join</button>
       </div>
     </form>
