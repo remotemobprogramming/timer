@@ -1,6 +1,5 @@
 package sh.mob.timer.web;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -14,7 +13,7 @@ import sh.mob.timer.web.Room.TimerRequest.TimerType;
 
 final class Room {
 
-  public static final TimerRequest NULL_TIMER_REQUEST = new TimerRequest(0L, null, null, null);
+  public static final TimerRequest NULL_TIMER_REQUEST = new TimerRequest(0L, null, null, null, null);
   private final String name;
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
   private final Sinks.Many<TimerRequest> sink =
@@ -25,14 +24,44 @@ final class Room {
   }
 
   public void add(Long timer, String user) {
-    TimerRequest timerRequest = new TimerRequest(timer, Instant.now(), user, TimerType.TIMER);
+    String nextUser = findNextUser(user);
+    TimerRequest timerRequest =
+        new TimerRequest(timer, Instant.now(), user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }
 
+  private String findNextUser(String user) {
+    if (timerRequests.isEmpty()) {
+      return null;
+    }
+
+    var users =
+        timerRequests.stream()
+            .filter(timerRequest -> timerRequest.type == TimerType.TIMER)
+            .map(TimerRequest::getUser)
+            .collect(Collectors.toList());
+
+    while (!users.isEmpty() && users.lastIndexOf(user) == users.size() - 1) {
+      users.remove(users.size() - 1);
+    }
+
+    if (users.isEmpty()) {
+      return null;
+    }
+
+    int nextIndexCandidate = users.lastIndexOf(user) + 1;
+    return users.get(nextIndexCandidate);
+  }
+
   public void addBreaktimer(Long breaktimer, String user) {
     TimerRequest timerRequest =
-        new TimerRequest(breaktimer, Instant.now(), user, TimerType.BREAKTIMER);
+        new TimerRequest(
+            breaktimer,
+            Instant.now(),
+            user,
+            lastTimerRequest().map(TimerRequest::getNextUser).orElse(null),
+            TimerType.BREAKTIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }
@@ -65,78 +94,6 @@ final class Room {
     return sink().currentSubscriberCount() == 0;
   }
 
-  public static final class TimeLeft {
-
-    private final Duration duration;
-    private final Long timer;
-    private final Instant requested;
-    private final String name;
-
-    public TimeLeft(Duration duration, Long timer, Instant requested, String name) {
-      this.duration = duration;
-      this.timer = timer;
-      this.requested = requested;
-      this.name = name;
-    }
-
-    public Duration duration() {
-      return duration;
-    }
-
-    public Long timer() {
-      return timer;
-    }
-
-    public Instant requested() {
-      return requested;
-    }
-
-    public String name() {
-      return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) return true;
-      if (obj == null || obj.getClass() != this.getClass()) return false;
-      var that = (TimeLeft) obj;
-      return Objects.equals(this.duration, that.duration)
-          && Objects.equals(this.timer, that.timer)
-          && Objects.equals(this.requested, that.requested)
-          && Objects.equals(this.name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(duration, timer, requested, name);
-    }
-
-    @Override
-    public String toString() {
-      return "TimeLeft["
-          + "duration="
-          + duration
-          + ", "
-          + "timer="
-          + timer
-          + ", "
-          + "requested="
-          + requested
-          + ", "
-          + "name="
-          + name
-          + ']';
-    }
-  }
-
-  public List<String> team() {
-    return timerRequests().stream()
-        .map(TimerRequest::getUser)
-        .distinct()
-        .sorted()
-        .collect(Collectors.toList());
-  }
-
   public String name() {
     return name;
   }
@@ -155,12 +112,14 @@ final class Room {
     private final Long timer;
     private final Instant requested;
     private final String user;
+    private final String nextUser;
     private final TimerType type;
 
-    TimerRequest(Long timer, Instant requested, String user, TimerType type) {
+    TimerRequest(Long timer, Instant requested, String user, String nextUser, TimerType type) {
       this.timer = timer;
       this.requested = requested;
       this.user = user;
+      this.nextUser = nextUser;
       this.type = type;
     }
 
@@ -176,6 +135,10 @@ final class Room {
       return user;
     }
 
+    public String getNextUser() {
+      return nextUser;
+    }
+
     public TimerType getType() {
       return type;
     }
@@ -188,12 +151,13 @@ final class Room {
       return Objects.equals(this.timer, that.timer)
           && Objects.equals(this.requested, that.requested)
           && Objects.equals(this.user, that.user)
+          && Objects.equals(this.nextUser, that.nextUser)
           && this.type == that.type;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(timer, requested, user, type);
+      return Objects.hash(timer, requested, user, nextUser, type);
     }
 
     @Override
@@ -207,6 +171,9 @@ final class Room {
           + ", "
           + "user="
           + user
+          + ", "
+          + "nextUser="
+          + nextUser
           + ", "
           + "type="
           + type
