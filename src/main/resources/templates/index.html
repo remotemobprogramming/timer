@@ -31,12 +31,12 @@
     <form method="post" class="mb-3">
       <div class="input-group">
         <span class="input-group-text" id="basic-addon3">[[${url}]]</span>
-        <input class="form-control" type="text" id="room" name="room" placeholder="room /[a-z0-9-]+/" required autofocus />
+        <input class="form-control" type="text" id="room" name="room" th:value="${randomRoomName}" placeholder="room /[a-z0-9-]+/" required autofocus />
         <button type="submit" class="btn btn-primary">Join</button>
       </div>
     </form>
         </div>
-        <div class="text-muted">create random room <a href="/crazy-eagle-12" th:href="|/${randomRoomName}|" onclick="">[[${randomRoomName}]]</a></div>
+        <div class="text-muted">or enter your team's room name</div>
       </div>
     </div>
 
