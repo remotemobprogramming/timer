@@ -40,9 +40,7 @@
       </div>
     </div>
 
-    <p>
-      There are [[${numberOfConnections}]] active users.
-    </p>
+    <p id="active-users"></p>
   </main>
   <footer class="text-muted text-center mt-5">
     Created by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
@@ -52,6 +50,28 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
   <script type="text/javascript">
     Notification.requestPermission();
+
+    let url = `/events`;
+    console.log('setting up event source at ' + url);
+    const eventSource = new EventSource(url);
+    eventSource.onopen = () => {
+      console.log('opened connection to ' + url);
+    };
+    eventSource.addEventListener('ACTIVE_USERS_UPDATE', (e) => {
+      console.log("Updating active users " + e.data)
+      var activeUsers = parseInt(e.data, 10);
+      var text = "";
+      if (activeUsers === 0) {
+        text = "There is no active user.";
+      } else if (activeUsers === 1) {
+        text = "There is 1 active user.";
+      } else if (activeUsers > 1) {
+        text = `There are ${e.data} active users.`;
+      } else {
+        text = "";
+      }
+      document.getElementById('active-users').innerHTML = text;
+    });
   </script>
 
 <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
