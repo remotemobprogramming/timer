@@ -24,6 +24,7 @@ public class IndexController {
   public String index(Model model) {
     model.addAttribute("numberOfConnections", roomRepository.countConnections());
     model.addAttribute("url", url);
+    model.addAttribute("randomRoomName", roomRepository.newRandomRoomName());
     return "index";
   }
 

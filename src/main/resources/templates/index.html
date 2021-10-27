@@ -27,6 +27,7 @@
 
     <div class="row justify-content-center mt-5 mb-5">
       <div class="col-md-6">
+        <div>
     <form method="post" class="mb-3">
       <div class="input-group">
         <span class="input-group-text" id="basic-addon3">[[${url}]]</span>
@@ -34,10 +35,12 @@
         <button type="submit" class="btn btn-primary">Join</button>
       </div>
     </form>
+        </div>
+        <div class="text-muted">create random room <a href="/crazy-eagle-12" th:href="|/${randomRoomName}|" onclick="">[[${randomRoomName}]]</a></div>
       </div>
     </div>
 
-    <p class="text-muted">
+    <p>
       There are [[${numberOfConnections}]] active users.
     </p>
   </main>

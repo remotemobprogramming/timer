@@ -67,6 +67,20 @@
   </script>
   <script type="text/javascript">
 
+    function hasCurrentUser() {
+      let currentUser = getCurrentUser();
+      return currentUser instanceof String && currentUser !== "";
+    }
+
+    function getCurrentUser() {
+      return localStorage.getItem('user');
+    }
+
+    function setCurrentUser(user) {
+      console.log("Setting user="+user);
+      return localStorage.setItem('user', user);
+    }
+
     function hasAudioEnabled() {
       return localStorage.getItem('audio') === 'true';
     }
@@ -74,11 +88,13 @@
     function enableAudio() {
       localStorage.setItem('audio', 'true');
       document.getElementById('audio-speaker').innerHTML = '🔉'
+      checkAudioPlayback()
     }
 
     function disableAudio() {
       localStorage.setItem('audio', 'false');
       document.getElementById('audio-speaker').innerHTML = '🔇'
+      checkAudioPlayback()
     }
 
     function toggleAudio() {
@@ -119,7 +135,7 @@
 
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      timerUserDiv.innerHTML = data !== null ? ` 👤 ${data}` : '';
+      timerUserDiv.innerHTML = data !== null ? ` 👤 <a onclick="setCurrentUser('${data}')">${data}</a>` : '';
     }
 
     var timerDurationDiv = document.getElementById('timer-duration');
@@ -152,6 +168,10 @@
       })
     }
 
+    function isTimerOfCurrentUser() {
+      return hasCurrentUser() && requestUser === getCurrentUser();
+    }
+
     function timerFinished() {
       console.log("Timer finished. Notifying user.");
 
@@ -164,7 +184,9 @@
       });
 
       if (hasAudioEnabled()) {
-        let audioFile = '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3');
+        let audioFile = isTimerOfCurrentUser() ? '/' + (requestType === "TIMER" ? 'mobnext.mp3'
+            : 'mobstart.mp3') : '/timer.mp3';
+        console.log("Playing " + audioFile);
         new Audio(audioFile).play().then((e) => console.log("worked"), (e) => console.log("could not play " + e))
       }
     }
