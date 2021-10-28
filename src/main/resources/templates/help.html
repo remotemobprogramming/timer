@@ -32,7 +32,7 @@
     timer.mob.sh is a shared team timer for the tool <a href="https://www.mob.sh">mob.sh</a>.
   </p>
   <p>
-    Define your team room, by using a non-guessable string.
+    Define your team room by using a non-guessable string for your team.
     Configure mob.sh by setting an environment variable (e. g. in your <code>~/.zshrc</code> file).
   </p>
 
@@ -40,16 +40,9 @@
   <code>export MOB_TIMER_ROOM=myteam-327266</code>
   </p>
 
-  <p>The mob tool then sends a request to the timer.mob.sh server, including the current interval and
-  your configured Git username.
-  </p>
-
   <p>
-    You can overwrite the username by setting this environment variable.
-  </p>
-
-  <p>
-  <code>export MOB_TIMER_USER=override-git-user</code>
+    Start a new terminal. The <code>mob</code> tool now sends a request to the <em>timer.mob.sh</em> server
+    when a new timer was started, including the current timer interval and your configured Git username (<code>git config user.name</code>).
   </p>
 
   <p>Use <code>mob</code> as normal:</p>
@@ -63,6 +56,18 @@
   <p>
   All team members can view the timer at <a href="https://timer.mob.sh/myteam-327266">https://timer.mob.sh/myteam-327266</a>
   </p>
+
+  <h5>Configure Username</h5>
+
+  <p>
+    You can overwrite the username by setting this environment variable:
+  </p>
+
+  <p>
+    <code>export MOB_TIMER_USER=override-git-user</code>
+  </p>
+
+
 
   <h5>Activate Audio</h5>
   Audio in browsers is tricky (justifiably).<br>
