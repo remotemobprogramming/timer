@@ -29,8 +29,6 @@
 
     <div>
      <span id="timer-user" class="text-muted"></span>
-     <span id="timer-duration" class="text-muted"></span>
-     <span id="timer-finished" class="text-muted"></span>
      <span id="timer-next-user" class="text-muted"></span>
     </div>
 
@@ -150,19 +148,14 @@
       timerNextUserDiv.innerHTML = data !== null ? ` ➡️ ${data}` : '';
     }
 
-    var timerDurationDiv = document.getElementById('timer-duration');
-    function updateTimerDuration(data) {
-      timerDurationDiv.innerHTML = data !== null ? `⏲ ${data} min` : '';
-    }
+    // var timerDurationDiv = document.getElementById('timer-duration');
+    // function updateTimerDuration(data) {
+    //   timerDurationDiv.innerHTML = data !== null ? `⏲ ${data} min` : '';
+    // }
 
     var timerTypeDiv = document.getElementById('timer-type');
     function updateTimerType(data) {
       timerTypeDiv.innerHTML = data === 'BREAKTIMER' ? '☕' : '';
-    }
-
-    var timerFinishedDiv = document.getElementById('timer-finished');
-    function updateTimerFinished(data) {
-      timerFinishedDiv.innerHTML = data !== null ? ` 🏁 ${(formatTodayAware(data))}` : '';
     }
 
     function checkAudioPlayback() {
@@ -190,8 +183,6 @@
       updateTimerUser(null);
       updateTimerNextUser(requestNextUser);
       updateTimerType(null);
-      updateTimerDuration(null);
-      updateTimerFinished(null);
 
       Notification.requestPermission();
       new Notification(requestUser + ' $ ' + (requestType === "TIMER" ? 'mob next' : 'mob start'), {
@@ -291,10 +282,7 @@
         requestNextUser = null
         requestTimer = null
 
-        updateTimerFinished(null);
         updateTimerUser(null);
-        updateTimerDuration(null);
-        updateTimerType(null);
         updateTimerNextUser(null);
 
         clearHistory();
@@ -303,10 +291,8 @@
       }
 
       let finished = Date.parse(request.requested) + (request.timer * 60 * 1000);
-      updateTimerFinished(finished);
       updateTimerUser(request.user)
       updateTimerNextUser(null)
-      updateTimerDuration(request.timer)
       updateTimerType(request.type)
 
       requestedTimestamp = Date.parse(request.requested);
