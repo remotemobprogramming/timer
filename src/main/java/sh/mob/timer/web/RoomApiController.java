@@ -25,7 +25,7 @@ public class RoomApiController {
   }
 
   @GetMapping
-  @RequestMapping(value = {"/{roomId:[a-z0-9-]+}/sse2","/{roomId:[a-z0-9-]+}/events"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @RequestMapping(value ="/{roomId:[a-z0-9-]+}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<Room.TimerRequest>> getEventStream(
       @PathVariable String roomId, ServerHttpResponse response) {
     response
