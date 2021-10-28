@@ -47,7 +47,7 @@ public class RoomApiController {
 
   @PutMapping("/{roomId:[a-z0-9-]+}")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public void publishEvent(@PathVariable String roomId, @RequestBody TimerRequest timerRequest) {
+  public void publishEvent(@PathVariable String roomId, @RequestBody PutTimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
       room.add(timerRequest.timer(), timerRequest.user());
@@ -56,13 +56,13 @@ public class RoomApiController {
     }
   }
 
-  static final class TimerRequest {
+  static final class PutTimerRequest {
 
     private final Long timer;
     private final Long breaktimer;
     private final String user;
 
-    TimerRequest(Long timer, Long breaktimer, String user) {
+    PutTimerRequest(Long timer, Long breaktimer, String user) {
       this.timer = timer;
       this.user = user;
       this.breaktimer = breaktimer;
@@ -80,11 +80,23 @@ public class RoomApiController {
       return user;
     }
 
+    public Long getTimer() {
+      return timer;
+    }
+
+    public Long getBreaktimer() {
+      return breaktimer;
+    }
+
+    public String getUser() {
+      return user;
+    }
+
     @Override
     public boolean equals(Object obj) {
       if (obj == this) return true;
       if (obj == null || obj.getClass() != this.getClass()) return false;
-      var that = (TimerRequest) obj;
+      var that = (PutTimerRequest) obj;
       return Objects.equals(this.timer, that.timer)
           && Objects.equals(this.breaktimer, that.breaktimer)
           && Objects.equals(this.user, that.user);
@@ -97,7 +109,7 @@ public class RoomApiController {
 
     @Override
     public String toString() {
-      return "TimerRequest["
+      return "PutTimerRequest["
           + "timer="
           + timer
           + ", "
