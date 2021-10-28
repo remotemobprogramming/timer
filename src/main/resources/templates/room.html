@@ -20,7 +20,7 @@
 <div class="col-lg-8 mx-auto p-3 py-md-5">
 
   <div class="text-center mb-5">
-    #[[${room.name}]] <span id="audio-speaker" onclick="toggleAudio()"></span>
+    #[[${room.name}]]
 
    <div class="display-1">
      <span id="timer-type"></span>
@@ -34,8 +34,6 @@
 
   </div>
 </div>
-
-<div class="alert alert-warning" id="audio-interaction" style="display: none;"><button class="btn btn-primary" onclick="checkAudioPlayback()">activate audio output</button> <a href="https://developer.chrome.com/blog/autoplay/">why you need to do this</a></div>
 
   <div class="row justify-content-center mb-3">
     <div class="col-lg-1"></div>
@@ -61,8 +59,21 @@
 
 </div>
 
-<footer class="text-center text-muted">
-  Created by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
+<footer class="text-center text-muted small">
+  <p>
+    <a href="#" onclick="checkAudioPlayback()" id="audio-interaction">Activate Audio</a>
+    <span id="audio-speaker" onclick="toggleAudio()"></span>
+    |
+    <a href="https://timer.mob.sh/help">Help</a>
+    |
+    <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
+    |
+    <a href="https://www.mob.sh">mob.sh</a>
+  </p>
+
+  <p>
+    Created by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
+  </p>
 </footer>
 
  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
@@ -148,10 +159,6 @@
       timerNextUserDiv.innerHTML = data !== null ? ` ➡️ ${data}` : '';
     }
 
-    // var timerDurationDiv = document.getElementById('timer-duration');
-    // function updateTimerDuration(data) {
-    //   timerDurationDiv.innerHTML = data !== null ? `⏲ ${data} min` : '';
-    // }
 
     var timerTypeDiv = document.getElementById('timer-type');
     function updateTimerType(data) {
@@ -160,16 +167,16 @@
 
     function checkAudioPlayback() {
       if (!hasAudioEnabled()) {
-        document.getElementById('audio-interaction').style.display = 'none';
+        document.getElementById('audio-interaction').innerText = 'Audio activated';
         return;
       }
 
       new Audio('/silence.mp3').play().then((e) => {
         console.log("audio working");
-        document.getElementById('audio-interaction').style.display = 'none';
+        document.getElementById('audio-interaction').innerText = 'Audio activated';
       }, (e) => {
         console.log("audio not working")
-        document.getElementById('audio-interaction').style.display = 'block';
+        document.getElementById('audio-interaction').innerText = 'Activate Audio';
       })
     }
 

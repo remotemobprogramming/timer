@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <title>Help</title>
+</head>
+<body>
+
+<div class="container">
+  <h1>Help</h1>
+
+  <h5>Installation</h5>
+
+  <p>
+    timer.mob.sh is a shared team timer for the tool <a href="https://www.mob.sh">mob.sh</a>.
+  </p>
+  <p>
+    Define your team room, by using a non-guessable string.
+    Configure mob.sh by setting an environment variable (e. g. in your <code>~/.zshrc</code> file).
+  </p>
+
+  <p>
+  <code>export MOB_TIMER_ROOM=myteam-327266</code>
+  </p>
+
+  <p>The mob tool then sends a request to the timer.mob.sh server, including the current interval and
+  your configured Git username.
+  </p>
+
+  <p>
+    You can overwrite the username by setting this environment variable.
+  </p>
+
+  <p>
+  <code>export MOB_TIMER_USER=override-git-user</code>
+  </p>
+
+  <p>Use <code>mob</code> as normal:</p>
+
+  <ul class="list-unstyled">
+    <li><code>mob start 10</code></li>
+    <li><code>mob timer 10</code></li>
+    <li><code>mob break 5</code></li>
+  </ul>
+
+  <p>
+  All team members can view the timer at <a href="https://timer.mob.sh/myteam-327266">https://timer.mob.sh/myteam-327266</a>
+  </p>
+
+  <h5>Activate Audio</h5>
+  Audio in browsers is tricky (justifiably).<br>
+  Activate an audio signal by pressing the link <em>Activate Audio</em> in the footer.<br>
+  Read more <a href="https://developer.chrome.com/blog/autoplay/" target="_blank">why you need to do this</a>.
+
+
+</div>
+
+<footer class="text-center text-muted small mt-5">
+  <p>
+    <a href="https://timer.mob.sh/help">Help</a>
+    |
+    <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
+    |
+    <a href="https://www.mob.sh">mob.sh</a>
+  </p>
+
+  <p>
+    Created by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
+  </p>
+</footer>
+
+<script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+<noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
+</body>
+</html>
