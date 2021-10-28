@@ -20,7 +20,7 @@
 <div class="col-lg-8 mx-auto p-3 py-md-5">
 
   <div class="text-center mb-5">
-    #[[${room.name}]]
+    <a href="/myroom" th:href="|/${room.name}|" class="text-body text-decoration-none">#[[${room.name}]]</a>
 
    <div class="display-1">
      <span id="timer-type"></span>
@@ -38,7 +38,7 @@
   <div class="row justify-content-center mb-3">
     <div class="col-lg-1"></div>
     <div class="col-6 col-lg-5">
-        <h5>Help</h5>
+        <h5>Setup</h5>
       <ul class="list-unstyled">
         <li><code>export MOB_TIMER_ROOM=[[${room.name}]]</code></li>
         <li><code>export MOB_TIMER_USER=override-git-user</code></li>
@@ -64,7 +64,7 @@
     <a href="#" onclick="checkAudioPlayback()" id="audio-interaction">Activate Audio</a>
     <span id="audio-speaker" onclick="toggleAudio()"></span>
     |
-    <a href="https://timer.mob.sh/help">Help</a>
+    <a href="/help">Help</a>
     |
     <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
     |
