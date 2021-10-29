@@ -124,7 +124,7 @@
     }
 
     function getCountdownRemainingTimeString(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested) {
-      var remainingDurationInMilliseconds = timerDurationInMilliseconds - elapsedMillisecondsSinceRequested;
+      let remainingDurationInMilliseconds = timerDurationInMilliseconds - elapsedMillisecondsSinceRequested;
       let remainingSeconds = Math.floor(remainingDurationInMilliseconds / 1000);
       let remainingMinutesPart = Math.floor(remainingSeconds / 60);
       let remainingSecondsPart = remainingSeconds % 60;
@@ -232,7 +232,7 @@
 
     function renderTimer() {
       if (requestedTimestamp !== null) {
-        var elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
+        let elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
         if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
           updateRemainingTime(
               getCountdownRemainingTimeString(timerDurationInMilliseconds,
@@ -265,9 +265,9 @@
 
     function prependToHistory(newEntry) {
       let historyElement = document.getElementById('history');
-      var current = historyElement.innerHTML.toString();
+      let current = historyElement.innerHTML.toString();
       if (!current.includes(newEntry)) {
-        var newListItem = document.createElement("li");
+        let newListItem = document.createElement("li");
         newListItem.innerText = newEntry;
         historyElement.prepend(newChild);
       }
@@ -279,7 +279,7 @@
 
     eventSource.addEventListener('TIMER_REQUEST', (e) => {
       console.log('handling event TIMER_REQUEST ' + e.data);
-      var request = JSON.parse(e.data);
+      let request = JSON.parse(e.data);
 
       if (request.timer === 0 && request.user === null) {
         console.log('Resetting state');
