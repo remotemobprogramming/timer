@@ -103,13 +103,13 @@
 
     function enableAudio() {
       localStorage.setItem('audio', 'true');
-      document.getElementById('audio-speaker').innerHTML = '🔉'
+      document.getElementById('audio-speaker').innerText = '🔉'
       checkAudioPlayback()
     }
 
     function disableAudio() {
       localStorage.setItem('audio', 'false');
-      document.getElementById('audio-speaker').innerHTML = '🔇'
+      document.getElementById('audio-speaker').innerText = '🔇'
       checkAudioPlayback()
     }
 
@@ -146,23 +146,23 @@
     var timerDiv = document.getElementById('timer');
     function updateRemainingTime(data) {
       document.title = `${data} #${room}`;
-      timerDiv.innerHTML = data;
+      timerDiv.innerText = data;
     }
 
     var timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      timerUserDiv.innerHTML = data !== null ? ` 👤 <a onclick="setCurrentUser('${data}')">${data}</a>` : '';
+      timerUserDiv.innerText = data !== null ? ` 👤 ${data}` : '';
     }
 
     var timerNextUserDiv = document.getElementById('timer-next-user');
     function updateTimerNextUser(data) {
-      timerNextUserDiv.innerHTML = data !== null ? ` ➡️ ${data}` : '';
+      timerNextUserDiv.innerText = data !== null ? ` ➡️ ${data}` : '';
     }
 
 
     var timerTypeDiv = document.getElementById('timer-type');
     function updateTimerType(data) {
-      timerTypeDiv.innerHTML = data === 'BREAKTIMER' ? '☕' : '';
+      timerTypeDiv.innerText = data === 'BREAKTIMER' ? '☕' : '';
     }
 
     function checkAudioPlayback() {
@@ -209,14 +209,14 @@
 
     let room = '[[${room.name}]]';
 
-    let url2 = `/${room}/events`;
-    console.log('setting up event source at ' + url2);
-    const eventSource2 = new EventSource(url2);
-    eventSource2.onopen = () => {
-      console.log('opened connection to ' + url2);
+    let roomEventsUrl = `/${room}/events`;
+    console.log('setting up event source at ' + roomEventsUrl);
+    const eventSource = new EventSource(roomEventsUrl);
+    eventSource.onopen = () => {
+      console.log('opened connection to ' + roomEventsUrl);
     };
-    eventSource2.onerror = (e) => {
-      console.log('error on connection to ' + url2 + ": " + e.data);
+    eventSource.onerror = (e) => {
+      console.log('error on connection to ' + roomEventsUrl + ": " + e.data);
     };
 
     let progressbarElement = document.getElementById("progressbar");
@@ -267,7 +267,9 @@
       let historyElement = document.getElementById('history');
       var current = historyElement.innerHTML.toString();
       if (!current.includes(newEntry)) {
-        historyElement.innerHTML = newEntry + current;
+        var newListItem = document.createElement("li");
+        newListItem.innerText = newEntry;
+        historyElement.prepend(newChild);
       }
     }
 
@@ -275,7 +277,7 @@
       document.getElementById('history').innerHTML = '';
     }
 
-    eventSource2.addEventListener('TIMER_REQUEST', (e) => {
+    eventSource.addEventListener('TIMER_REQUEST', (e) => {
       console.log('handling event TIMER_REQUEST ' + e.data);
       var request = JSON.parse(e.data);
 
@@ -309,7 +311,7 @@
       requestNextUser = request.nextUser
       requestTimer = request.timer
 
-      prependToHistory(`<li>🕒 ${formatTodayAware(request.requested)} 👤 ${request.user} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))}</li>`);
+      prependToHistory(`🕒 ${formatTodayAware(request.requested)} 👤 ${request.user} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))}`);
     });
 
     checkAudioPlayback();
