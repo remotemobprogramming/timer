@@ -200,10 +200,13 @@
       });
 
       if (hasAudioEnabled()) {
-        let audioFile = isTimerOfCurrentUser() ? '/' + (requestType === "TIMER" ? 'mobnext.mp3'
-            : 'mobstart.mp3') : '/timer.mp3';
+        // isTimerOfCurrentUser() ? '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3') :
+        let audioFile = '/timer.mp3';
         console.log("Playing " + audioFile);
-        new Audio(audioFile).play().then((e) => console.log("worked"), (e) => console.log("could not play " + e))
+        new Audio(audioFile).play().then(
+            (e) => {},
+            (e) => console.log("could not play " + e)
+        )
       }
     }
 
@@ -269,7 +272,7 @@
       if (!current.includes(newEntry)) {
         let newListItem = document.createElement("li");
         newListItem.innerText = newEntry;
-        historyElement.prepend(newChild);
+        historyElement.prepend(newListItem);
       }
     }
 

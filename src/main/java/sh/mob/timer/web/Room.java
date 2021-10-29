@@ -2,16 +2,19 @@ package sh.mob.timer.web;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Sinks;
 import sh.mob.timer.web.Room.TimerRequest.TimerType;
 
 final class Room {
+
+  private static final Logger log = LoggerFactory.getLogger(Room.class);
 
   public static final TimerRequest NULL_TIMER_REQUEST = new TimerRequest(0L, null, null, null, null);
   private final String name;
@@ -83,23 +86,12 @@ final class Room {
             Instant.now().minus(24, ChronoUnit.HOURS).isAfter(timerRequest.getRequested()));
     if (timerRequests.isEmpty()) {
       sink.tryEmitNext(NULL_TIMER_REQUEST);
+      log.info("Emptied room {}", name);
     }
-  }
-
-  boolean isEmpty() {
-    return lastTimerRequest().isEmpty();
-  }
-
-  boolean isUnused() {
-    return sink().currentSubscriberCount() == 0;
   }
 
   public String name() {
     return name;
-  }
-
-  public List<TimerRequest> timerRequests() {
-    return Collections.unmodifiableList(timerRequests);
   }
 
   public static final class TimerRequest {

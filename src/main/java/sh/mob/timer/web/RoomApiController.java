@@ -1,6 +1,8 @@
 package sh.mob.timer.web;
 
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -18,6 +20,8 @@ import reactor.core.publisher.Flux;
 @RequestMapping()
 public class RoomApiController {
 
+  private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
+
   private final RoomRepository roomRepository;
 
   public RoomApiController(RoomRepository roomRepository) {
@@ -25,7 +29,9 @@ public class RoomApiController {
   }
 
   @GetMapping
-  @RequestMapping(value ="/{roomId:[a-z0-9-]+}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @RequestMapping(
+      value = "/{roomId:[a-z0-9-]+}/events",
+      produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<Room.TimerRequest>> getEventStream(
       @PathVariable String roomId, ServerHttpResponse response) {
     response
@@ -51,8 +57,20 @@ public class RoomApiController {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
       room.add(timerRequest.timer(), timerRequest.user());
+      log.info(
+          "Add timer {} by user {} for room {}",
+          timerRequest.timer,
+          timerRequest.user,
+          room.name());
     } else if (timerRequest.breaktimer() != null) {
       room.addBreaktimer(timerRequest.breaktimer(), timerRequest.user());
+      log.info(
+          "Add break timer {} by user {} for room {}",
+          timerRequest.breaktimer(),
+          timerRequest.user,
+          room.name());
+    } else {
+      log.warn("Could not understand PUT request for room {}", roomId);
     }
   }
 

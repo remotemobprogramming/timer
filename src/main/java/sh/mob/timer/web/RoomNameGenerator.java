@@ -1,6 +1,5 @@
 package sh.mob.timer.web;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -15,30 +14,30 @@ public class RoomNameGenerator {
   private final List<String> animals = loadCsvFile("animals.csv");
   private final List<String> adjectives = loadCsvFile("adjectives.csv");
 
-  String randomAnimal() {
-    return animals.get(random.nextInt(animals.size()));
-  }
-
-  String randomAdjective() {
-    return adjectives.get(random.nextInt(adjectives.size()));
-  }
-
-  int randomNumber() {
-    return random.nextInt(90) + 10;
-  }
-
   String randomName() {
     return String.join("-", randomAdjective(), randomAnimal(), Integer.toString(randomNumber()));
   }
 
+  private String randomAnimal() {
+    return animals.get(random.nextInt(animals.size()));
+  }
+
+  private String randomAdjective() {
+    return adjectives.get(random.nextInt(adjectives.size()));
+  }
+
+  private int randomNumber() {
+    return random.nextInt(90) + 10;
+  }
+
   private static List<String> loadCsvFile(String csvFile) {
-    InputStream resourceAsStream = RoomNameGenerator.class.getResourceAsStream("/" + csvFile);
+    var resourceAsStream = RoomNameGenerator.class.getResourceAsStream("/" + csvFile);
     if (resourceAsStream == null) {
       return new ArrayList<>();
     }
 
-    Scanner scanner = new Scanner(resourceAsStream);
-    List<String> result = new ArrayList<>();
+    var scanner = new Scanner(resourceAsStream);
+    var result = new ArrayList<String>();
     while (scanner.hasNextLine()) {
       result.add(scanner.nextLine().trim().toLowerCase(Locale.ROOT));
     }
