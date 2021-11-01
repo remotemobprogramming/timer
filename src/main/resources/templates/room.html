@@ -45,7 +45,7 @@
 
   <div id="history-container" class="mb-5" style="display: none">
     <h5>History <small class="text-muted">Last 24h</small></h5>
-    <ul id="history" class="list-unstyled">
+    <ul id="history" class="list-unstyled font-monospace">
     </ul>
   </div>
 
@@ -324,7 +324,7 @@
       requestNextUser = request.nextUser
       requestTimer = request.timer
 
-      prependToHistory(`🕒 ${formatTodayAware(request.requested)} 👤 ${request.user} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))}`);
+      prependToHistory(`🕒 ${formatTodayAware(request.requested)} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))} 👤 ${request.user}`);
     });
 
     checkAudioPlayback();
