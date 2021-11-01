@@ -43,13 +43,13 @@
   </div>
 </div>
 
-  <div id="history-container">
+  <div id="history-container" class="mb-5" style="display: none">
     <h5>History <small class="text-muted">Last 24h</small></h5>
     <ul id="history" class="list-unstyled">
     </ul>
   </div>
 
-  <div id="usage-container" class="mt-5">
+  <div id="usage-container">
     <h5>Usage</h5>
     <ul class="list-unstyled">
       <li><code>export MOB_TIMER_ROOM=[[${room.name}]]</code></li>
@@ -282,10 +282,12 @@
         newListItem.innerText = newEntry;
         historyElement.prepend(newListItem);
       }
+      document.getElementById('history-container').style.display = 'block';
     }
 
     function clearHistory() {
       document.getElementById('history').innerHTML = '';
+      document.getElementById('history-container').style.display = 'none';
     }
 
     eventSource.addEventListener('TIMER_REQUEST', (e) => {
