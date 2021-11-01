@@ -20,3 +20,4 @@ docker rm mobtimer
 docker run -d -e VIRTUAL_HOST=timer.mob.sh -e LETSENCRYPT_HOST=timer.mob.sh -e LETSENCRYPT_EMAIL=simon.harrer@gmail.com -e PORT=80 --expose 80 --network=proxy --name mobtimer simonharrer/mob-timer:latest
 echo "done"
 ```
+
