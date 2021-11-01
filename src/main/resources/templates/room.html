@@ -20,7 +20,7 @@
 <body>
 
 <div class="progress" style="height: 3px;">
-  <div class="progress-bar" role="progressbar" id="progressbar" style="width: 0%;"></div>
+  <div class="progress-bar" role="progressbar" id="progressbar" style="width:0;"></div>
 </div>
 
 <main class="container">
@@ -89,20 +89,6 @@
   </script>
   <script type="text/javascript">
 
-    function hasCurrentUser() {
-      let currentUser = getCurrentUser();
-      return currentUser instanceof String && currentUser !== "";
-    }
-
-    function getCurrentUser() {
-      return localStorage.getItem('user');
-    }
-
-    function setCurrentUser(user) {
-      console.log("Setting user="+user);
-      return localStorage.setItem('user', user);
-    }
-
     function hasAudioEnabled() {
       return localStorage.getItem('audio') === 'true';
     }
@@ -149,24 +135,24 @@
           : date.toLocaleString();
     }
 
-    var timerDiv = document.getElementById('timer');
+    let timerDiv = document.getElementById('timer');
     function updateRemainingTime(data) {
       document.title = `${data} #${room}`;
       timerDiv.innerText = data;
     }
 
-    var timerUserDiv = document.getElementById('timer-user');
+    let timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
       timerUserDiv.innerText = data !== null ? ` 👤 ${data}` : '';
     }
 
-    var timerNextUserDiv = document.getElementById('timer-next-user');
+    let timerNextUserDiv = document.getElementById('timer-next-user');
     function updateTimerNextUser(data) {
       timerNextUserDiv.innerText = data !== null ? ` ➡️ ${data}` : '';
     }
 
 
-    var timerTypeDiv = document.getElementById('timer-type');
+    let timerTypeDiv = document.getElementById('timer-type');
     function updateTimerType(data) {
       timerTypeDiv.innerText = data === 'BREAKTIMER' ? '☕' : '';
     }
@@ -177,17 +163,14 @@
         return;
       }
 
-      new Audio('/silence.mp3').play().then((e) => {
+      new Audio('/silence.mp3').play().then(() => {
         console.log("audio working");
         document.getElementById('audio-interaction').innerText = 'Audio activated';
       }, (e) => {
-        console.log("audio not working")
+        console.log("audio not working");
+        (console.error || console.log).call(console, e.stack || e);
         document.getElementById('audio-interaction').innerText = 'Activate Audio';
       })
-    }
-
-    function isTimerOfCurrentUser() {
-      return hasCurrentUser() && requestUser === getCurrentUser();
     }
 
     function timerFinished() {
@@ -208,11 +191,10 @@
       }
 
       if (hasAudioEnabled()) {
-        // isTimerOfCurrentUser() ? '/' + (requestType === "TIMER" ? 'mobnext.mp3' : 'mobstart.mp3') :
         let audioFile = '/timer.mp3';
         console.log("Playing " + audioFile);
         new Audio(audioFile).play().then(
-            (e) => {},
+            () => {},
             (e) => console.log("could not play " + e)
         )
       }
@@ -232,13 +214,13 @@
 
     let progressbarElement = document.getElementById("progressbar");
 
-    var requestedTimestamp = null;
-    var timerDurationInMilliseconds = null;
-    var isTimerRunning = false;
-    var requestType = null;
-    var requestUser = null;
-    var requestNextUser = null;
-    var requestTimer = null;
+    let requestedTimestamp = null;
+    let timerDurationInMilliseconds = null;
+    let isTimerRunning = false;
+    let requestType = null;
+    let requestUser = null;
+    let requestNextUser = null;
+    let requestTimer = null;
 
 
     function renderTimer() {
@@ -249,12 +231,12 @@
               getCountdownRemainingTimeString(timerDurationInMilliseconds,
                   elapsedMillisecondsSinceRequested)
           );
-          progressbarElement.style = `width: ${getCountdownPercentage(timerDurationInMilliseconds,
-              elapsedMillisecondsSinceRequested)}%`;
+          let countdownPercentage = getCountdownPercentage(timerDurationInMilliseconds, elapsedMillisecondsSinceRequested);
+          progressbarElement.style.width = `${countdownPercentage}%`;
           isTimerRunning = true;
         } else {
           updateRemainingTime('00:00');
-          progressbarElement.style = "width: 0%";
+          progressbarElement.style.width = "0";
 
           if (isTimerRunning) {
             timerFinished();
@@ -290,11 +272,16 @@
       document.getElementById('history-container').style.display = 'none';
     }
 
-    eventSource.addEventListener('TIMER_REQUEST', (e) => {
-      console.log('handling event TIMER_REQUEST ' + e.data);
-      let request = JSON.parse(e.data);
+    eventSource.addEventListener('TIMER_REQUEST', (event) => {
+      console.log('handling event TIMER_REQUEST ' + event.data);
+      let timerRequest = JSON.parse(event.data);
+      let requested = timerRequest["requested"];
+      let timerInMinutes = timerRequest["timer"];
+      let user = timerRequest["user"];
+      let nextUser = timerRequest["nextUser"];
+      let type = timerRequest["type"];
 
-      if (request.timer === 0 && request.user === null) {
+      if (timerInMinutes === 0 && user === null) {
         console.log('Resetting state');
 
         requestedTimestamp = null
@@ -312,19 +299,19 @@
         return;
       }
 
-      let finished = Date.parse(request.requested) + (request.timer * 60 * 1000);
-      updateTimerUser(request.user)
+      let finished = Date.parse(requested) + (timerInMinutes * 60 * 1000);
+      updateTimerUser(user)
       updateTimerNextUser(null)
-      updateTimerType(request.type)
+      updateTimerType(type)
 
-      requestedTimestamp = Date.parse(request.requested);
-      timerDurationInMilliseconds = request.timer * 60 * 1000;
-      requestType = request.type
-      requestUser = request.user
-      requestNextUser = request.nextUser
-      requestTimer = request.timer
+      requestedTimestamp = Date.parse(requested);
+      timerDurationInMilliseconds = timerInMinutes * 60 * 1000;
+      requestType = type
+      requestUser = user
+      requestNextUser = nextUser
+      requestTimer = timerInMinutes
 
-      prependToHistory(`🕒 ${formatTodayAware(request.requested)} ${request.type === "BREAKTIMER" ? "☕" : "⏲"} ${request.timer} min 🏁 ${(formatTodayAware(finished))} 👤 ${request.user}`);
+      prependToHistory(`🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕" : "⏲"} ${timerInMinutes} min 🏁 ${(formatTodayAware(finished))} 👤 ${user}`);
     });
 
     checkAudioPlayback();
