@@ -27,7 +27,7 @@
 
 <div class="col-lg-8 mx-auto p-3 py-md-5">
 
-  <div class="text-center mb-5">
+  <div class="text-center mb-3">
     <a href="/myroom" th:href="|/${room.name}|" class="text-body text-decoration-none">#[[${room.name}]]</a>
 
    <div class="display-1">
@@ -45,8 +45,10 @@
 
   <div id="history-container" class="mb-5" style="display: none">
     <h5>History <small class="text-muted">Last 24h</small></h5>
-    <ul id="history" class="list-unstyled font-monospace">
-    </ul>
+    <small>
+      <ul id="history" class="list-unstyled font-monospace">
+      </ul>
+    </small>
   </div>
 
   <div id="usage-container">
