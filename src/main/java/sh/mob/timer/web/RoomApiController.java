@@ -1,5 +1,6 @@
 package sh.mob.timer.web;
 
+import java.time.Duration;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import sh.mob.timer.web.Room.TimerRequest;
 
 @RestController
 @RequestMapping()
@@ -41,14 +43,25 @@ public class RoomApiController {
     response.getHeaders().setConnection("keep-alive");
     var room = roomRepository.get(roomId);
 
-    return room.sink()
-        .asFlux()
-        .map(
-            timerRequest ->
-                ServerSentEvent.<Room.TimerRequest>builder()
-                    .event("TIMER_REQUEST")
-                    .data(timerRequest)
-                    .build());
+    var timerRequestFlux =
+        room.sink()
+            .asFlux()
+            .map(
+                timerRequest ->
+                    ServerSentEvent.<TimerRequest>builder()
+                        .event("TIMER_REQUEST")
+                        .data(timerRequest)
+                        .build());
+    var keepAliveFlux =
+        Flux.interval(Duration.ofSeconds(5L))
+            .map(
+                second ->
+                    ServerSentEvent.<Room.TimerRequest>builder()
+                        .event("KEEP_ALIVE")
+                        .data(new TimerRequest(null, null, null, null, null))
+                        .build());
+
+    return keepAliveFlux.mergeWith(timerRequestFlux);
   }
 
   @PutMapping("/{roomId:[a-z0-9-]+}")
