@@ -69,6 +69,7 @@
   <p>
     <a href="#" onclick="enableAudio()" id="audio-interaction">Activate Audio</a>
     <span id="audio-speaker" onclick="toggleAudio()"></span>
+    <a href="#" onclick="testAudio()" id="audio-test">Test Audio</a>
     |
     <a href="/help">Help</a>
     |
@@ -112,6 +113,10 @@
     }
 
     hasAudioEnabled() ? enableAudio() : disableAudio();
+
+    function testAudio() {
+      new Audio('/timer.mp3').play();
+    }
 
     function addLeadingZero(num) {
       return (num < 10 ? '0' : '') + num;
