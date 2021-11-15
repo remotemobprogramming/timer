@@ -26,10 +26,10 @@ final class Room {
     this.name = name;
   }
 
-  public void add(Long timer, String user) {
+  public void add(Long timer, String user, Instant requested) {
     String nextUser = findNextUser(user);
     TimerRequest timerRequest =
-        new TimerRequest(timer, Instant.now(), user, nextUser, TimerType.TIMER);
+        new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }

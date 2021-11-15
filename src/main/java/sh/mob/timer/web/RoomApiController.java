@@ -1,6 +1,8 @@
 package sh.mob.timer.web;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +27,11 @@ public class RoomApiController {
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
 
   private final RoomRepository roomRepository;
+  private final Clock clock;
 
-  public RoomApiController(RoomRepository roomRepository) {
+  public RoomApiController(RoomRepository roomRepository, Clock clock) {
     this.roomRepository = roomRepository;
+    this.clock = clock;
   }
 
   @GetMapping
@@ -69,7 +73,7 @@ public class RoomApiController {
   public void publishEvent(@PathVariable String roomId, @RequestBody PutTimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
-      room.add(timerRequest.timer(), timerRequest.user());
+      room.add(timerRequest.timer(), timerRequest.user(), Instant.now(clock));
       log.info(
           "Add timer {} by user {} for room {}",
           timerRequest.timer,
