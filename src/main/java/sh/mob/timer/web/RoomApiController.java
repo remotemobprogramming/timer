@@ -34,7 +34,7 @@ public class RoomApiController {
   @RequestMapping(
       value = "/{roomId:[a-z0-9-]+}/events",
       produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<Room.TimerRequest>> getEventStream(
+  public Flux<ServerSentEvent<Object>> getEventStream(
       @PathVariable String roomId, ServerHttpResponse response) {
     response
         .getHeaders()
@@ -48,20 +48,20 @@ public class RoomApiController {
             .asFlux()
             .map(
                 timerRequest ->
-                    ServerSentEvent.<TimerRequest>builder()
-                        .event("TIMER_REQUEST")
-                        .data(timerRequest)
-                        .build());
+                    ServerSentEvent.builder().event("TIMER_REQUEST").data(timerRequest).build());
     var keepAliveFlux =
         Flux.interval(Duration.ofSeconds(5L))
             .map(
                 second ->
-                    ServerSentEvent.<Room.TimerRequest>builder()
+                    ServerSentEvent.builder()
                         .event("KEEP_ALIVE")
                         .data(new TimerRequest(null, null, null, null, null))
                         .build());
+    var initialHistory =
+        Flux.just(room.historyWithoutLatest())
+            .map(list -> ServerSentEvent.builder().event("INITIAL_HISTORY").data(list).build());
 
-    return keepAliveFlux.mergeWith(timerRequestFlux);
+    return Flux.concat(initialHistory, keepAliveFlux.mergeWith(timerRequestFlux));
   }
 
   @PutMapping("/{roomId:[a-z0-9-]+}")

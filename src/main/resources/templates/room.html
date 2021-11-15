@@ -279,6 +279,29 @@
       document.getElementById('history-container').style.display = 'none';
     }
 
+    eventSource.addEventListener('INITIAL_HISTORY', (event) => {
+      console.log('handling event INITIAL_HISTORY ' + event.data);
+      let historyEntries = JSON.parse(event.data);
+
+      if (historyEntries === null) {
+        return;
+      }
+
+      historyEntries.forEach(historyEntry => {
+        prependToHistory(createHistoryEntry(historyEntry));
+      });
+    })
+
+    function createHistoryEntry(timerRequest) {
+      let requested = timerRequest["requested"];
+      let timerInMinutes = timerRequest["timer"];
+      let user = timerRequest["user"];
+      let type = timerRequest["type"];
+      let finished = Date.parse(requested) + (timerInMinutes * 60 * 1000);
+      return `🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕"
+          : "⏲"} ${timerInMinutes} min 🏁 ${(formatTodayAware(finished))} 👤 ${user}`;
+    }
+
     eventSource.addEventListener('TIMER_REQUEST', (event) => {
       console.log('handling event TIMER_REQUEST ' + event.data);
       let timerRequest = JSON.parse(event.data);
@@ -306,7 +329,6 @@
         return;
       }
 
-      let finished = Date.parse(requested) + (timerInMinutes * 60 * 1000);
       updateTimerUser(user)
       updateTimerNextUser(null)
       updateTimerType(type)
@@ -318,7 +340,7 @@
       requestNextUser = nextUser
       requestTimer = timerInMinutes
 
-      prependToHistory(`🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕" : "⏲"} ${timerInMinutes} min 🏁 ${(formatTodayAware(finished))} 👤 ${user}`);
+      prependToHistory(createHistoryEntry(timerRequest));
     });
 
     checkAudioPlayback();

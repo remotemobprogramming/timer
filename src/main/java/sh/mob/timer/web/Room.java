@@ -94,6 +94,14 @@ final class Room {
     return name;
   }
 
+  public List<TimerRequest> historyWithoutLatest() {
+    if (timerRequests.isEmpty()) {
+      return List.of();
+    }
+
+    return timerRequests.subList(0, timerRequests.size() - 1);
+  }
+
   public static final class TimerRequest {
 
     enum TimerType {
