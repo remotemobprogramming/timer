@@ -27,7 +27,7 @@ public class IndexApiController {
   @RequestMapping(
       value = {"/events"},
       produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<ServerSentEvent<Long>> subscribeToEvents2(ServerHttpResponse response) {
+  public Flux<ServerSentEvent<Long>> events(ServerHttpResponse response) {
     response
         .getHeaders()
         .setCacheControl("no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
@@ -36,21 +36,17 @@ public class IndexApiController {
 
     return numberOfActiveUsersSink
         .asFlux()
-        .map(
-            numberOfActiveUsers ->
-                ServerSentEvent.<Long>builder()
-                    .event("ACTIVE_USERS_UPDATE")
-                    .data(numberOfActiveUsers)
-                    .build())
+        .map(numberOfActiveUsers -> createEvent(numberOfActiveUsers, "ACTIVE_USERS_UPDATE"))
         .mergeWith(
             numberOfActiveTimersSink
                 .asFlux()
                 .map(
                     numberOfActiveUsers ->
-                        ServerSentEvent.<Long>builder()
-                            .event("ACTIVE_TIMERS_UPDATE")
-                            .data(numberOfActiveUsers)
-                            .build()));
+                        createEvent(numberOfActiveUsers, "ACTIVE_TIMERS_UPDATE")));
+  }
+
+  private static ServerSentEvent<Long> createEvent(Long numberOfActiveUsers, String event) {
+    return ServerSentEvent.<Long>builder().event(event).data(numberOfActiveUsers).build();
   }
 
   @Scheduled(fixedRateString = "PT1S")

@@ -13,12 +13,13 @@ public class RoomRepository {
 
   private static final Logger log = LoggerFactory.getLogger(RoomRepository.class);
 
-  private final Map<String, Room> repository = new ConcurrentHashMap<>();
+  private final Map<String, Room> repository;
 
   private final RoomNameGenerator roomNameGenerator;
 
   public RoomRepository(RoomNameGenerator roomNameGenerator) {
     this.roomNameGenerator = roomNameGenerator;
+    this.repository = new ConcurrentHashMap<>();
   }
 
   Room get(String room) {

@@ -1,7 +1,9 @@
 package sh.mob.timer.web;
 
+import static java.time.temporal.ChronoUnit.*;
+import static java.util.function.Predicate.not;
+
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,8 +30,8 @@ final class Room {
   }
 
   public void add(Long timer, String user, Instant requested) {
-    String nextUser = findNextUser(user);
-    TimerRequest timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
+    var nextUser = findNextUser(user);
+    var timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }
@@ -43,6 +45,8 @@ final class Room {
         timerRequests.stream()
             .filter(timerRequest -> timerRequest.type == TimerType.TIMER)
             .map(TimerRequest::getUser)
+            .filter(Objects::nonNull)
+            .filter(not(String::isBlank))
             .collect(Collectors.toList());
 
     while (!users.isEmpty() && users.lastIndexOf(user) == users.size() - 1) {
@@ -81,9 +85,9 @@ final class Room {
   }
 
   public void removeOldTimerRequests() {
+    var now = Instant.now();
     this.timerRequests.removeIf(
-        timerRequest ->
-            Instant.now().minus(24, ChronoUnit.HOURS).isAfter(timerRequest.getRequested()));
+        timerRequest -> now.minus(24, HOURS).isAfter(timerRequest.getRequested()));
     if (timerRequests.isEmpty()) {
       sink.tryEmitNext(NULL_TIMER_REQUEST);
       log.info("Emptied room {}", name);
@@ -110,10 +114,7 @@ final class Room {
     return timerRequest.getTimer() != null
         && timerRequest.getTimer() > 0
         && timerRequest.getRequested() != null
-        && timerRequest
-            .getRequested()
-            .plus(timerRequest.getTimer(), ChronoUnit.MINUTES)
-            .isAfter(now);
+        && timerRequest.getRequested().plus(timerRequest.getTimer(), MINUTES).isAfter(now);
   }
 
   public static final class TimerRequest {
