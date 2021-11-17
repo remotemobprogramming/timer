@@ -41,6 +41,7 @@
     </div>
 
     <p id="active-users"></p>
+    <p id="active-timers"></p>
   </main>
   <footer class="text-center text-muted small mt-5">
     <p>
@@ -84,6 +85,21 @@
         text = "";
       }
       document.getElementById('active-users').innerHTML = text;
+    });
+    eventSource.addEventListener('ACTIVE_TIMERS_UPDATE', (e) => {
+      console.log("Updating active timers " + e.data)
+      var activeUsers = parseInt(e.data, 10);
+      var text = "";
+      if (activeUsers === 0) {
+        text = "There is no active timers.";
+      } else if (activeUsers === 1) {
+        text = "There is 1 active timer.";
+      } else if (activeUsers > 1) {
+        text = `There are ${e.data} active timers.`;
+      } else {
+        text = "";
+      }
+      document.getElementById('active-timers').innerHTML = text;
     });
   </script>
 

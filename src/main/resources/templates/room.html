@@ -297,9 +297,14 @@
       let timerInMinutes = timerRequest["timer"];
       let user = timerRequest["user"];
       let type = timerRequest["type"];
-      let finished = Date.parse(requested) + (timerInMinutes * 60 * 1000);
+
+      if (user === null || user === "") {
+        return `🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕"
+            : "⏲"} ${timerInMinutes} min`;
+      }
+
       return `🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕"
-          : "⏲"} ${timerInMinutes} min 🏁 ${(formatTodayAware(finished))} 👤 ${user}`;
+          : "⏲"} ${timerInMinutes} min 👤 ${user}`;
     }
 
     eventSource.addEventListener('TIMER_REQUEST', (event) => {

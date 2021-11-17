@@ -16,13 +16,17 @@ public class IndexApiController {
   private final RoomRepository roomRepository;
   private final Sinks.Many<Long> numberOfActiveUsersSink =
       Sinks.many().replay().latestOrDefault(0L);
+  private final Sinks.Many<Long> numberOfActiveTimersSink =
+      Sinks.many().replay().latestOrDefault(0L);
 
   public IndexApiController(RoomRepository roomRepository) {
     this.roomRepository = roomRepository;
   }
 
   @GetMapping
-  @RequestMapping(value = {"/events"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @RequestMapping(
+      value = {"/events"},
+      produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<Long>> subscribeToEvents2(ServerHttpResponse response) {
     response
         .getHeaders()
@@ -37,12 +41,21 @@ public class IndexApiController {
                 ServerSentEvent.<Long>builder()
                     .event("ACTIVE_USERS_UPDATE")
                     .data(numberOfActiveUsers)
-                    .build());
+                    .build())
+        .mergeWith(
+            numberOfActiveTimersSink
+                .asFlux()
+                .map(
+                    numberOfActiveUsers ->
+                        ServerSentEvent.<Long>builder()
+                            .event("ACTIVE_TIMERS_UPDATE")
+                            .data(numberOfActiveUsers)
+                            .build()));
   }
 
   @Scheduled(fixedRateString = "PT1S")
   public void update() {
     numberOfActiveUsersSink.tryEmitNext(roomRepository.countConnections());
+    numberOfActiveTimersSink.tryEmitNext(roomRepository.countActiveTimers());
   }
-
 }

@@ -1,5 +1,6 @@
 package sh.mob.timer.web;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -51,5 +52,10 @@ public class RoomRepository {
     return repository.values().stream()
         .mapToLong(room -> room.sink().currentSubscriberCount())
         .sum();
+  }
+
+  public long countActiveTimers() {
+    var now = Instant.now();
+    return repository.values().stream().filter(room -> room.isTimerActive(now)).count();
   }
 }

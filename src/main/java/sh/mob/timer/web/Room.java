@@ -16,7 +16,8 @@ final class Room {
 
   private static final Logger log = LoggerFactory.getLogger(Room.class);
 
-  public static final TimerRequest NULL_TIMER_REQUEST = new TimerRequest(0L, null, null, null, null);
+  public static final TimerRequest NULL_TIMER_REQUEST =
+      new TimerRequest(0L, null, null, null, null);
   private final String name;
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
   private final Sinks.Many<TimerRequest> sink =
@@ -28,8 +29,7 @@ final class Room {
 
   public void add(Long timer, String user, Instant requested) {
     String nextUser = findNextUser(user);
-    TimerRequest timerRequest =
-        new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
+    TimerRequest timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
     sink.tryEmitNext(timerRequest);
   }
@@ -100,6 +100,20 @@ final class Room {
     }
 
     return timerRequests.subList(0, timerRequests.size() - 1);
+  }
+
+  public boolean isTimerActive(Instant now) {
+    return lastTimerRequest().filter(timerRequest -> isTimerActive(timerRequest, now)).isPresent();
+  }
+
+  private static boolean isTimerActive(TimerRequest timerRequest, Instant now) {
+    return timerRequest.getTimer() != null
+        && timerRequest.getTimer() > 0
+        && timerRequest.getRequested() != null
+        && timerRequest
+            .getRequested()
+            .plus(timerRequest.getTimer(), ChronoUnit.MINUTES)
+            .isAfter(now);
   }
 
   public static final class TimerRequest {
