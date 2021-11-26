@@ -73,14 +73,15 @@ public class RoomApiController {
   public void publishEvent(@PathVariable String roomId, @RequestBody PutTimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
-      room.add(timerRequest.timer(), timerRequest.user(), Instant.now(clock));
+      room.add(
+          truncateTooLongTimers(timerRequest.timer()), timerRequest.user(), Instant.now(clock));
       log.info(
           "Add timer {} by user {} for room {}",
           timerRequest.timer,
           timerRequest.user,
           room.name());
     } else if (timerRequest.breaktimer() != null) {
-      room.addBreaktimer(timerRequest.breaktimer(), timerRequest.user());
+      room.addBreaktimer(truncateTooLongTimers(timerRequest.breaktimer()), timerRequest.user());
       log.info(
           "Add break timer {} by user {} for room {}",
           timerRequest.breaktimer(),
@@ -89,6 +90,10 @@ public class RoomApiController {
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
     }
+  }
+
+  private static long truncateTooLongTimers(Long timer) {
+    return Math.min(60 * 24, Math.max(0, timer));
   }
 
   static final class PutTimerRequest {
