@@ -40,6 +40,46 @@
      <span id="timer-next-user" class="text-muted" title="next person"></span>
     </div>
 
+    <div>
+      <div class="input-group mt-3" style="justify-content: center">
+        <button class="btn btn-outline-secondary" type="button" id="timer-button" onclick="startTimer()">10 ⏲</button>
+        <button class="btn btn-outline-secondary" type="button" id="breaktimer-button" onclick="startBreaktimer()">15 ☕</button>
+        <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#exampleModal">⚙️</button>
+      </div>
+    </div>
+
+
+
+    <!-- Modal -->
+    <div class="modal" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Edit Timer</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="input-group mb-3">
+              <span class="input-group-text">export MOB_TIMER_USER=</span>
+              <input type="text" class="form-control" placeholder="username" id="user-input">
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text">mob timer</span>
+              <input type="text" class="form-control" placeholder="minutes" value="10" id="timer-input">
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text">mob break</span>
+              <input type="text" class="form-control" placeholder="minutes" value="10" id="breaktimer-input">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -150,7 +190,7 @@
 
     let timerUserDiv = document.getElementById('timer-user');
     function updateTimerUser(data) {
-      timerUserDiv.innerText = data !== null ? ` 👤 ${data}` : '';
+      timerUserDiv.innerText = data !== null && data !== "" ? ` 👤 ${data}` : '';
     }
 
     let timerNextUserDiv = document.getElementById('timer-next-user');
@@ -349,7 +389,57 @@
     });
 
     checkAudioPlayback();
+
+    function sendTimer(type, timer, user) {
+      let method = "PUT";
+      let url = "/" + room;
+      let json = `{"${type}": ${timer},"user": "${user}"}`;
+
+      console.log(`${method} ${url} ${json}`)
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(json);
+    }
+
+
+
+    function syncAndSetInitialValue(inputElementId, storageId, defaultValue) {
+      // set default value if nothing stored
+      let currentValue = localStorage.getItem(storageId);
+      if(currentValue == null || currentValue === "") {
+        localStorage.setItem(storageId, defaultValue);
+      }
+
+      // update input field
+      document.getElementById(inputElementId).value = localStorage.getItem(storageId);
+
+      // sync with input field
+      document.getElementById(inputElementId).onkeyup = function (e) {
+        localStorage.setItem(storageId, e.target.value);
+      }
+    }
+
+    syncAndSetInitialValue('user-input', 'user', '');
+    syncAndSetInitialValue('timer-input', 'timer', "10");
+    syncAndSetInitialValue('breaktimer-input', 'breaktimer', "15");
+
+    document.getElementById('timer-button').innerText = localStorage.getItem('timer') + " ⏲";
+    function startTimer() {
+      sendTimer('timer', localStorage.getItem('timer'), localStorage.getItem('user'));
+    }
+
+    document.getElementById('breaktimer-button').innerText = localStorage.getItem('breaktimer') + " ☕";
+    function startBreaktimer() {
+      sendTimer('breaktimer', localStorage.getItem('breaktimer'), localStorage.getItem('user'));
+    }
   </script>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
 <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
