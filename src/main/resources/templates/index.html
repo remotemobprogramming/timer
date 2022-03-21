@@ -31,7 +31,7 @@
     <form method="post" class="mb-3">
       <div class="input-group">
         <span class="input-group-text" id="basic-addon3">[[${url}]]</span>
-        <input class="form-control" type="text" id="room" name="room" th:value="${randomRoomName}" placeholder="room /[a-z0-9-]+/" required autofocus />
+        <input class="form-control" type="text" id="room" name="room" th:value="${randomRoomName}" placeholder="room /[A-Za-z0-9-_]+/" required autofocus />
         <button type="submit" class="btn btn-primary">Join</button>
       </div>
     </form>
