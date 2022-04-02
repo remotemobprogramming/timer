@@ -28,10 +28,14 @@ public class RoomApiController {
 
   private final RoomRepository roomRepository;
   private final Clock clock;
+  private final Stats stats;
 
-  public RoomApiController(RoomRepository roomRepository, Clock clock) {
+
+
+  public RoomApiController(RoomRepository roomRepository, Clock clock, Stats stats) {
     this.roomRepository = roomRepository;
     this.clock = clock;
+    this.stats = stats;
   }
 
   @GetMapping
@@ -73,20 +77,25 @@ public class RoomApiController {
   public void publishEvent(@PathVariable String roomId, @RequestBody PutTimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
+      long timer = truncateTooLongTimers(timerRequest.timer());
       room.add(
-          truncateTooLongTimers(timerRequest.timer()), timerRequest.user(), Instant.now(clock));
+          timer, timerRequest.user(), Instant.now(clock));
       log.info(
           "Add timer {} by user {} for room {}",
           timerRequest.timer,
           timerRequest.user,
           room.name());
+      stats.incrementTimer(timer);
     } else if (timerRequest.breaktimer() != null) {
-      room.addBreaktimer(truncateTooLongTimers(timerRequest.breaktimer()), timerRequest.user());
+      long breaktimer = truncateTooLongTimers(timerRequest.breaktimer());
+      room.addBreaktimer(breaktimer, timerRequest.user());
       log.info(
           "Add break timer {} by user {} for room {}",
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
+      stats.incrementBreaktimer(breaktimer);
+
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
     }
