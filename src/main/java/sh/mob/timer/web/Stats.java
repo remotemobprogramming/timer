@@ -1,5 +1,6 @@
 package sh.mob.timer.web;
 
+import java.time.Instant;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Stats {
 
+  private final Instant statisticsSince = Instant.now();
   private ConcurrentHashMap<Long, Long> timerCounts = new ConcurrentHashMap<Long, Long>();
   private ConcurrentHashMap<Long, Long> breaktimerCounts = new ConcurrentHashMap<Long, Long>();
 
@@ -37,4 +39,7 @@ public class Stats {
     return new TreeMap<>(breaktimerCounts);
   }
 
+  public Instant getStatisticsSince() {
+    return statisticsSince;
+  }
 }
