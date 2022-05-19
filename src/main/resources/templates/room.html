@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="/bootstrap.min.css" rel="stylesheet">
+  <script src="/bootstrap.bundle.min.js"></script>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-
   <title>00:00 #[[${room.name}]]</title>
 
   <style>
@@ -41,9 +41,39 @@
     </div>
 
     <div>
-      <div class="btn-group mt-3" style="justify-content: center">
-        <button class="btn btn-outline-secondary" type="button" id="timer-button">10 ⏲</button>
+      <div class="mt-3" style="justify-content: center">
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary" type="button" id="timer-button">10 ⏲</button>
+          <button type="button"
+                  class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul id="startTimerDropdown" class="dropdown-menu" style="min-width: auto">
+            <li><button class="dropdown-item" onclick="startTimer(5);">5 ⏲</button></li>
+            <li><button class="dropdown-item" onclick="startTimer(10);">10 ⏲</button></li>
+            <li><button class="dropdown-item" onclick="startTimer(15);">15 ⏲</button></li>
+            <li><button class="dropdown-item" onclick="startTimer(20);">20 ⏲</button></li>
+            <li><button class="dropdown-item" onclick="startTimer(25);">25 ⏲</button></li>
+            <li><button class="dropdown-item" onclick="startTimer(30);">30 ⏲</button></li>
+          </ul>
+        </div>
+        <div class="btn-group">
         <button class="btn btn-outline-secondary" type="button" id="breaktimer-button">15 ☕</button>
+        <button type="button"
+                class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+        <ul id="startBreaktimerDropdown" class="dropdown-menu" style="min-width: auto">
+          <li><button class="dropdown-item" onclick="startBreaktimer(5);"> 5 ☕</button></li>
+          <li><button class="dropdown-item" onclick="startBreaktimer(10);">10 ☕</button></li>
+          <li><button class="dropdown-item" onclick="startBreaktimer(15);">15 ☕</button></li>
+        </ul>
+        </div>
+
         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#configurationModal">⚙️</button>
       </div>
     </div>
@@ -60,7 +90,7 @@
           </div>
           <div class="modal-body">
             <div class="input-group mb-3">
-              <span class="input-group-text">export MOB_TIMER_USER=</span>
+              <span class="input-group-text">MOB_TIMER_USER=</span>
               <input type="text" class="form-control" placeholder="username" id="user-input">
             </div>
 
@@ -73,6 +103,8 @@
               <span class="input-group-text">mob break</span>
               <input type="number" class="form-control" placeholder="minutes" value="10" id="breaktimer-input">
             </div>
+
+            <p>Values are stored locally in your browser.</p>
           </div>
         </div>
       </div>
@@ -90,11 +122,13 @@
   </div>
 
   <div id="usage-container">
-    <h5>Usage</h5>
+    <h5>Integration with the mob tool</h5>
     <ul class="list-unstyled">
-      <li><code>export MOB_TIMER_ROOM=[[${room.name}]]</code></li>
+      <li>configure in ~/.mob</li>
+      <li><code>MOB_TIMER_ROOM=[[${room.name}]]</code></li>
     </ul>
     <ul class="list-unstyled">
+      <li>start timer in cli</li>
       <li><code>mob start 10</code></li>
       <li><code>mob timer 10</code></li>
       <li><code>mob break 5</code></li>
@@ -123,7 +157,6 @@
   </p>
 </footer>
 
-  <script src="/bootstrap.bundle.min.js"></script>
   <script src="/howler.min.js"></script>
   <script type="text/javascript">
     if ("Notification" in window) {
@@ -432,28 +465,35 @@
     syncAndSetInitialValue('user-input', 'user', '');
 
     const timerButton = document.getElementById('timer-button');
-    timerButton.addEventListener("click", startTimer);
+    timerButton.addEventListener("click", startTimerDefault);
     syncAndSetInitialValue('timer-input', 'timer', "10", updateTimerButton);
-    function startTimer() {
-      sendTimer('timer', localStorage.getItem('timer'), localStorage.getItem('user'));
+    function startTimerDefault() {
+      startTimer(localStorage.getItem('timer'));
+    }
+    function startTimer(timer) {
+      sendTimer('timer', timer, localStorage.getItem('user'));
     }
     function updateTimerButton() {
       timerButton.innerText = localStorage.getItem('timer') + " ⏲";
     }
 
     const breaktimerButton = document.getElementById('breaktimer-button');
-    breaktimerButton.addEventListener("click", startBreaktimer);
+    breaktimerButton.addEventListener("click", startBreaktimerDefault);
     syncAndSetInitialValue('breaktimer-input', 'breaktimer', "15", updateBreaktimerButton);
-    function startBreaktimer() {
-      sendTimer('breaktimer', localStorage.getItem('breaktimer'), localStorage.getItem('user'));
+    function startBreaktimerDefault() {
+      startBreaktimer(localStorage.getItem('breaktimer'));
     }
+
+    function startBreaktimer(breaktimer) {
+      sendTimer('breaktimer', breaktimer, localStorage.getItem('user'));
+    }
+
     function updateBreaktimerButton() {
       breaktimerButton.innerText = localStorage.getItem('breaktimer') + " ☕";
     }
   </script>
 
 <!-- Optional JavaScript -->
-<script src="/bootstrap.bundle.min.js"></script>
 
 <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
