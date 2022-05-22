@@ -6,6 +6,10 @@
 
   <link href="/bootstrap.min.css" rel="stylesheet">
   <script src="/bootstrap.bundle.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.5.1/vis-timeline-graph2d.min.js" integrity="sha512-JA7jCKVg16tY6QqK9Y6dVnycXUuplg+aeQsvCFCg+b8PkUN4mFOw853tlKI2Q03s+q6uBFdEeS1nc4ngYScitw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.5.1/vis-timeline-graph2d.css" integrity="sha512-iyqJFPM2g+aNANZ4TN96zt2HuYbAiEZfYaEvv1VbSL6fjbxTL7Yot3mx1ce1gpggT15MMM8ZinGw5wpKP1Oksw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <title>00:00 #[[${room.name}]]</title>
 
@@ -14,6 +18,22 @@
       .container{
         max-width: 720px;
       }
+    }
+
+    .vis-timeline {
+      border: none;
+    }
+
+    .vis-item.TIMER {
+      color: white;
+      background-color: green;
+      border-color: darkgreen;
+    }
+
+    .vis-item.BREAKTIMER {
+      color: white;
+      background-color: red;
+      border-color: darkred;
     }
   </style>
 </head>
@@ -71,9 +91,9 @@
           <li><button class="dropdown-item" onclick="startBreaktimer(5);"> 5 ☕</button></li>
           <li><button class="dropdown-item" onclick="startBreaktimer(10);">10 ☕</button></li>
           <li><button class="dropdown-item" onclick="startBreaktimer(15);">15 ☕</button></li>
-          <li><button class="dropdown-item" onclick="startBreaktimer(15);">30 ☕</button></li>
-          <li><button class="dropdown-item" onclick="startBreaktimer(15);">45 ☕</button></li>
-          <li><button class="dropdown-item" onclick="startBreaktimer(15);">60 ☕</button></li>
+          <li><button class="dropdown-item" onclick="startBreaktimer(30);">30 ☕</button></li>
+          <li><button class="dropdown-item" onclick="startBreaktimer(45);">45 ☕</button></li>
+          <li><button class="dropdown-item" onclick="startBreaktimer(60);">60 ☕</button></li>
         </ul>
         </div>
 
@@ -115,6 +135,8 @@
 
   </div>
 </div>
+
+  <div id="history-timeline" class="mb-5"></div>
 
   <div id="history-container" class="mb-5" style="display: none">
     <h5>History <small class="text-muted">Last 24h</small></h5>
@@ -339,7 +361,12 @@
     }
     timer();
 
-    function prependToHistory(newEntry) {
+    var historyState = []
+    var items = new vis.DataSet()
+
+    function prependToHistory(entry) {
+      let newEntry = createHistoryEntry(entry);
+
       let historyElement = document.getElementById('history');
       let current = historyElement.innerHTML.toString();
       if (!current.includes(newEntry)) {
@@ -348,12 +375,60 @@
         historyElement.prepend(newListItem);
       }
       document.getElementById('history-container').style.display = 'block';
+
+      historyState.push(entry);
+
+      let start = Date.parse(entry.requested);
+      let end = Date.parse(entry.requested) + (entry.timer * 60 * 1000);
+      let icon = typeToIcon(entry.type);
+      let title = `${icon} ${entry.timer} min started by 👤 ${entry.user}`;
+
+      let now = new Date();
+      items.forEach(item => {
+        if (item.end > now) {
+          items.update({id: item.id, end: now})
+        }
+      });
+
+      items.add({
+          content: '',
+          className: entry.type,
+          start: start,
+          end: end,
+          title: title,
+          group: entry.type === "TIMER" ? 2 : 1
+        });
     }
 
     function clearHistory() {
       document.getElementById('history').innerHTML = '';
       document.getElementById('history-container').style.display = 'none';
+      historyState = []
+      items.clear();
     }
+
+
+
+    function drawHistoryDiagram() {
+      // Create a Timeline
+      var timeline = new vis.Timeline(document.getElementById('history-timeline'), items, new vis.DataSet([{id: 1, content: '☕'}, {id: 2, content: '⏲'}]), {
+        editable: false,
+        selectable: false,
+        rollingMode: {
+          follow: true,
+          offset: 0.9
+        },
+        showMajorLabels: false,
+        showMinorLabels: true,
+        stack: false,
+        zoomable: false,
+        moveable: false,
+        start: new Date(new Date().getTime() - (1000 * 60 * 60 * 4) ),
+        end: new Date(new Date().getTime() + (1000 * 60 * 30) )
+      });
+    }
+
+    drawHistoryDiagram();
 
     eventSource.addEventListener('INITIAL_HISTORY', (event) => {
       console.log('handling event INITIAL_HISTORY ' + event.data);
@@ -364,7 +439,7 @@
       }
 
       historyEntries.forEach(historyEntry => {
-        prependToHistory(createHistoryEntry(historyEntry));
+        prependToHistory(historyEntry);
       });
     })
 
@@ -375,12 +450,14 @@
       let type = timerRequest["type"];
 
       if (user === null || user === "") {
-        return `🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕"
-            : "⏲"} ${timerInMinutes} min`;
+        return `🕒 ${formatTodayAware(requested)} ${typeToIcon(type)} ${timerInMinutes} min`;
       }
 
-      return `🕒 ${formatTodayAware(requested)} ${type === "BREAKTIMER" ? "☕"
-          : "⏲"} ${timerInMinutes} min 👤 ${user}`;
+      return `🕒 ${formatTodayAware(requested)} ${typeToIcon(type)} ${timerInMinutes} min 👤 ${user}`;
+    }
+
+    function typeToIcon(type) {
+      return type === "BREAKTIMER" ? "☕" : "⏲"
     }
 
     eventSource.addEventListener('TIMER_REQUEST', (event) => {
@@ -421,7 +498,7 @@
       requestNextUser = nextUser
       requestTimer = timerInMinutes
 
-      prependToHistory(createHistoryEntry(timerRequest));
+      prependToHistory(timerRequest);
     });
 
     checkAudioPlayback();
