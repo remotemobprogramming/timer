@@ -10,7 +10,5 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Build
-        run: ./mvnw package
-      - name: Test
-        run: ./mvnw test
+      - name: Build & Test
+        run: ./mvnw clean verify
