@@ -1,0 +1,16 @@
+on: [push, pull_request]
+name: Test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.5.1
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Build
+        run: ./mvnw package
+      - name: Test
+        run: ./mvnw test
