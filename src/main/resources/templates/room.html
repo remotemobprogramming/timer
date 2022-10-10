@@ -551,6 +551,8 @@
       startTimer(localStorage.getItem('timer'));
     }
     function startTimer(timer) {
+      localStorage.setItem('timer', timer);
+      updateTimerButton();
       sendTimer('timer', timer, localStorage.getItem('user'));
     }
     function updateTimerButton() {
@@ -565,6 +567,8 @@
     }
 
     function startBreaktimer(breaktimer) {
+      localStorage.setItem('breaktimer', breaktimer);
+      updateBreaktimerButton();
       sendTimer('breaktimer', breaktimer, localStorage.getItem('user'));
     }
 
