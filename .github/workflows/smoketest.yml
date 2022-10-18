@@ -1,0 +1,16 @@
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  smoketest:
+    runs-on: ubuntu-latest
+    name: Smoketest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v4
+        with:
+          spec: cypress/cypress/e2e/smoketest.cy.js

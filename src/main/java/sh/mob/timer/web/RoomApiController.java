@@ -24,13 +24,11 @@ import sh.mob.timer.web.Room.TimerRequest;
 @RequestMapping()
 public class RoomApiController {
 
+  private static final String SMOKETEST_ROOM_NAME = "testroom-310a9c47-515c-4ad7-a229-ae8efbab7387";
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
-
   private final RoomRepository roomRepository;
   private final Clock clock;
   private final Stats stats;
-
-
 
   public RoomApiController(RoomRepository roomRepository, Clock clock, Stats stats) {
     this.roomRepository = roomRepository;
@@ -85,7 +83,9 @@ public class RoomApiController {
           timerRequest.timer,
           timerRequest.user,
           room.name());
-      stats.incrementTimer(timer);
+      if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+        stats.incrementTimer(timer);
+      }
     } else if (timerRequest.breaktimer() != null) {
       long breaktimer = truncateTooLongTimers(timerRequest.breaktimer());
       room.addBreaktimer(breaktimer, timerRequest.user());
@@ -94,8 +94,9 @@ public class RoomApiController {
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
-      stats.incrementBreaktimer(breaktimer);
-
+      if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+        stats.incrementBreaktimer(breaktimer);
+      }
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
     }
