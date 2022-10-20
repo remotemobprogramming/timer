@@ -24,7 +24,7 @@ import sh.mob.timer.web.Room.TimerRequest;
 @RequestMapping()
 public class RoomApiController {
 
-  private static final String SMOKETEST_ROOM_NAME_PREFIX = "testroom-";
+  private static final String SMOKETEST_ROOM_NAME = "testroom-310a9c47-515c-4ad7-a229-ae8efbab7387";
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
   private final RoomRepository roomRepository;
   private final Clock clock;
@@ -83,9 +83,7 @@ public class RoomApiController {
           timerRequest.timer,
           timerRequest.user,
           room.name());
-      if (!room.name().startsWith(SMOKETEST_ROOM_NAME_PREFIX)) {
-        stats.incrementTimer(timer);
-      }
+      incrementTimerStatsExceptForTestRoom(room, timer);
     } else if (timerRequest.breaktimer() != null) {
       long breaktimer = truncateTooLongTimers(timerRequest.breaktimer());
       room.addBreaktimer(breaktimer, timerRequest.user());
@@ -94,11 +92,21 @@ public class RoomApiController {
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
-      if (!room.name().startsWith(SMOKETEST_ROOM_NAME_PREFIX)) {
-        stats.incrementBreaktimer(breaktimer);
-      }
+      incrementBreakTimerStatsExceptForTestRoom(room, breaktimer);
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
+    }
+  }
+
+  private void incrementBreakTimerStatsExceptForTestRoom(Room room, long breaktimer) {
+    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+      stats.incrementBreaktimer(breaktimer);
+    }
+  }
+
+  private void incrementTimerStatsExceptForTestRoom(Room room, long timer) {
+    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+      stats.incrementTimer(timer);
     }
   }
 
