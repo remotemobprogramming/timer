@@ -1,28 +1,26 @@
 on:
   schedule:
     - cron: '*/5 * * * *'
-  push:
-name: Smoketest
+name: Smoketest on PROD
 jobs:
   smoketest:
     runs-on: ubuntu-latest
-    name: Smoketest
+    name: Smoketest on PROD
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Cypress run
         uses: cypress-io/github-action@v4
         with:
           working-directory: cypress
-          #spec: cypress/cypress/e2e/smoketest.cy.js
-      - uses: actions/upload-artifact@v2
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: cypress-screenshots
           path: cypress/cypress/screenshots
-      # Test run video was always captured, so this action uses "always()" condition
-      - uses: actions/upload-artifact@v2
+      - name: Upload videos
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: cypress-videos
