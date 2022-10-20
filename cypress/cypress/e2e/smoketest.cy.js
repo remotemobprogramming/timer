@@ -50,7 +50,7 @@ describe('Mob.sh Timer', () => {
     cy.wait(100)
     cy.get('.btn-close').click()
     let initialHistoryCountChainer = cy.get('#history-container').find('li').its('length')
-    cy.get('#timer-button').contains(1).click().wait(100)
+    cy.get('#timer-button').contains(1).click().wait(200)
     cy.get('#history-container').find('li').its('length').then(currentCount => {
       initialHistoryCountChainer.should('eq', currentCount - 1)
     })
@@ -63,7 +63,7 @@ describe('Mob.sh Timer', () => {
     cy.wait(100)
     cy.get('.btn-close').click()
     let initialHistoryCountChainer = cy.get('#history-container').find('li').its('length')
-    cy.get('#breaktimer-button').contains(1).click().wait(100)
+    cy.get('#breaktimer-button').contains(1).click().wait(200)
     cy.get('#history-container').find('li').its('length').then(currentCount => {
       initialHistoryCountChainer.should('eq', currentCount - 1)
     })

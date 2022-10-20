@@ -24,7 +24,7 @@ import sh.mob.timer.web.Room.TimerRequest;
 @RequestMapping()
 public class RoomApiController {
 
-  private static final String SMOKETEST_ROOM_NAME = "testroom-310a9c47-515c-4ad7-a229-ae8efbab7387";
+  private static final String SMOKETEST_ROOM_NAME_PREFIX = "testroom-";
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
   private final RoomRepository roomRepository;
   private final Clock clock;
@@ -83,7 +83,7 @@ public class RoomApiController {
           timerRequest.timer,
           timerRequest.user,
           room.name());
-      if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+      if (!room.name().startsWith(SMOKETEST_ROOM_NAME_PREFIX)) {
         stats.incrementTimer(timer);
       }
     } else if (timerRequest.breaktimer() != null) {
@@ -94,7 +94,7 @@ public class RoomApiController {
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
-      if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
+      if (!room.name().startsWith(SMOKETEST_ROOM_NAME_PREFIX)) {
         stats.incrementBreaktimer(breaktimer);
       }
     } else {
