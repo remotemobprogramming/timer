@@ -8,19 +8,19 @@ jobs:
     name: Smoketest on PROD
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Cypress run
         uses: cypress-io/github-action@v4
         with:
           working-directory: cypress
       - name: Upload screenshots
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: cypress-screenshots
           path: cypress/cypress/screenshots
       - name: Upload videos
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: cypress-videos
