@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - 'main'
+
+name: Build Docker Image and Deploy to DEV
+jobs:
+  test:
+    uses: remotemobprogramming/timer/.github/workflows/test.yml@main
+  dockerbuild:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.5.1
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Docker Build
+        run: ./mvnw spring-boot:build-image
+      - name: Docker Push
+        run: docker push remotemobprogramming/mob-timer:${{ github.sha }}
+  deploy:
+    needs: dockerbuild
+    uses: remotemobprogramming/timer/.github/workflows/deploy.yml@main
+    with:
+      domain: dev.timer.mob.sh
+      tag: ${{ github.sha }}
+      secrets:
+        - SSH_HOST: ${{ secrets.SSH_HOST_DEV }}
+        - SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        - SSH_KEY: ${{ secrets.SSH_KEY }}

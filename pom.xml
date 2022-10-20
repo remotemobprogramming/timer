@@ -50,7 +50,7 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <image>
-            <name>docker.io/simonharrer/mob-timer</name>
+            <name>docker.io/remotemobprogramming/mob-timer</name>
           </image>
         </configuration>
       </plugin>

@@ -1,0 +1,14 @@
+on:
+  release:
+    types: [published]
+name: Release
+jobs:
+  deploy:
+    uses: remotemobprogramming/timer/.github/workflows/deploy.yml@main
+    with:
+      domain: timer.mob.sh
+      tag: ${{ github.sha }}
+      secrets:
+        - SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+        - SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        - SSH_KEY: ${{ secrets.SSH_KEY }}
