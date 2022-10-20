@@ -3,12 +3,12 @@ on:
     types: [published]
 name: Release
 jobs:
-  deploy:
-    uses: remotemobprogramming/timer/.github/workflows/deploy.yml@main
+  deployment:
+    uses: remotemobprogramming/timer/.github/workflows/deployment.yml@main
     with:
       domain: timer.mob.sh
       tag: ${{ github.sha }}
-      secrets:
-        - SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
-        - SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        - SSH_KEY: ${{ secrets.SSH_KEY }}
+    secrets:
+      SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}

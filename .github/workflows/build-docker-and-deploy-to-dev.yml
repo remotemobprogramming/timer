@@ -24,15 +24,18 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker Build
         run: ./mvnw spring-boot:build-image
-      - name: Docker Push
+      - name: Docker Tag
+        run: docker tag remotemobprogramming/mob-timer remotemobprogramming/mob-timer:${{ github.sha }}
+      - name: Docker Push Latest
+        run: docker push remotemobprogramming/mob-timer:latest
+      - name: Docker Push Tag
         run: docker push remotemobprogramming/mob-timer:${{ github.sha }}
-  deploy:
-    needs: dockerbuild
-    uses: remotemobprogramming/timer/.github/workflows/deploy.yml@main
+  deployment:
+    uses: remotemobprogramming/timer/.github/workflows/testname.yml@main
     with:
       domain: dev.timer.mob.sh
       tag: ${{ github.sha }}
-      secrets:
-        - SSH_HOST: ${{ secrets.SSH_HOST_DEV }}
-        - SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        - SSH_KEY: ${{ secrets.SSH_KEY }}
+    secrets:
+      SSH_HOST: ${{ secrets.SSH_HOST_DEV }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
