@@ -31,11 +31,18 @@ jobs:
       - name: Docker Push Tag
         run: docker push remotemobprogramming/mob-timer:${{ github.sha }}
   deployment:
-    uses: remotemobprogramming/timer/.github/workflows/testname.yml@main
-    with:
-      domain: dev.timer.mob.sh
-      tag: ${{ github.sha }}
-    secrets:
-      SSH_HOST: ${{ secrets.SSH_HOST_DEV }}
-      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-      SSH_KEY: ${{ secrets.SSH_KEY }}
+    needs: dockerbuild
+    environment: development
+    concurrency: development
+    runs-on: ubuntu-latest
+    steps:
+      - name: deploy
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST_DEV }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker stop mobtimer
+            docker rm mobtimer
+            docker run -d -e VIRTUAL_HOST=dev.timer.mob.sh -e LETSENCRYPT_HOST=dev.timer.mob.sh -e LETSENCRYPT_EMAIL=team@mob.sh -e PORT=80 --expose 80 --network=proxy --pull always --name mobtimer remotemobprogramming/mob-timer:${{ github.sha }}
