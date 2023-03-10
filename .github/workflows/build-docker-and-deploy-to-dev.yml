@@ -36,13 +36,21 @@ jobs:
     concurrency: development
     runs-on: ubuntu-latest
     steps:
-      - name: deploy
-        uses: appleboy/ssh-action@v0.1.5
+      - uses: actions/checkout@v3
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.5.1
         with:
-          host: ${{ secrets.SSH_HOST_DEV }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            docker stop mobtimer
-            docker rm mobtimer
-            docker run -d -e VIRTUAL_HOST=dev.timer.mob.sh -e LETSENCRYPT_HOST=dev.timer.mob.sh -e LETSENCRYPT_EMAIL=team@mob.sh -e PORT=80 --expose 80 --network=proxy --pull always --name mobtimer remotemobprogramming/mob-timer:${{ github.sha }}
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Login to Heroku Docker Registry
+        uses: docker/login-action@v2
+        with:
+          registry: registry.heroku.com
+          username: _
+          password: ${{ secrets.HEROKU_AUTH_TOKEN }}
+      - name: Docker Build Heroku
+        run: ./mvnw spring-boot:build-image
+      - name: Docker Tag Heroku
+        run: docker tag remotemobprogramming/mob-timer registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
+      - name: Docker Push Heroku
+        run: docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
