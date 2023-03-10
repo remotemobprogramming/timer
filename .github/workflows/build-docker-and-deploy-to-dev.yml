@@ -42,6 +42,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Install Heroku Cli
+        run: brew tap heroku/brew && brew install heroku
       - name: Login to Heroku Docker Registry
         uses: docker/login-action@v2
         with:
@@ -54,3 +56,5 @@ jobs:
         run: docker tag remotemobprogramming/mob-timer registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
       - name: Docker Push Heroku
         run: docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
+      - name: Heroku release
+        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME_DEV }}
