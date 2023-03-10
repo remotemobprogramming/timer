@@ -37,26 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.5.1
+      - uses: akhileshns/heroku-deploy@v3.12.13
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-      - name: Install Heroku Cli
-        run: brew tap heroku/brew && brew install heroku
-      - name: Login to Heroku Docker Registry
-        uses: docker/login-action@v2
-        with:
-          registry: registry.heroku.com
-          username: _
-          password: ${{ secrets.HEROKU_AUTH_TOKEN }}
-      - name: Docker Build Heroku
-        run: ./mvnw spring-boot:build-image
-      - name: Docker Tag Heroku
-        run: docker tag remotemobprogramming/mob-timer registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
-      - name: Docker Push Heroku
-        run: docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME_DEV }}/web
-      - name: Heroku release
-        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME_DEV }}
+          heroku_api_key: ${{secrets.HEROKU_AUTH_TOKEN}}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_DEV }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
