@@ -24,7 +24,7 @@ describe('Mob.sh Timer', () => {
   it('mob timer works', () => {
     cy.visit('https://timer.mob.sh/' + roomId)
     cy.get('[data-bs-toggle="modal"]').click()
-    cy.get('#timer-input').clear().type("1")
+    cy.get('#timer-input').clear({force: true}).type("1")
     cy.wait(100)
     cy.get('.btn-close').click()
     cy.get('#timer-button').contains(1).click()
@@ -35,7 +35,7 @@ describe('Mob.sh Timer', () => {
   it('break timer works', () => {
     cy.visit('https://timer.mob.sh/' + roomId)
     cy.get('[data-bs-toggle="modal"]').click()
-    cy.get('#breaktimer-input').clear().type("1")
+    cy.get('#breaktimer-input').clear({force: true}).type("1")
     cy.wait(100)
     cy.get('.btn-close').click()
     cy.get('#breaktimer-button').contains(1).click()
