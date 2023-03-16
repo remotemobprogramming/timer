@@ -1,5 +1,11 @@
 <footer th:fragment="footer" class="text-center text-muted small mt-5">
   <p>
+    <th:block th:if="${room}">
+      <a href="#" onclick="enableAudio()" id="audio-interaction">Activate Audio</a>
+      <span id="audio-speaker" onclick="toggleAudio()"></span>
+      <a href="#" onclick="testAudio()" id="audio-test">Test Audio</a>
+      |
+    </th:block>
     <a href="/help">Help</a>
     |
     <a href="/stats">Stats</a>
