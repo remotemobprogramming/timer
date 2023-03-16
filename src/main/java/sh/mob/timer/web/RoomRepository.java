@@ -51,7 +51,7 @@ public class RoomRepository {
 
   public long countConnections() {
     return repository.values().stream()
-        .mapToLong(room -> room.sink().currentSubscriberCount())
+        .mapToLong(room -> room.timerRequestSink().currentSubscriberCount())
         .sum();
   }
 

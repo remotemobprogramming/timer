@@ -55,7 +55,7 @@
 
 <main class="container">
 
-<div class="col-lg-8 mx-auto p-3 py-md-5">
+<div class="col-lg-12 mx-auto p-3 py-md-5">
 
   <div class="text-center">
     <a class="text-decoration-none mb-3" href="/"><h1>Mob Timer</h1></a>
@@ -70,6 +70,8 @@
      <span id="timer-user" class="text-muted"></span>
      <span id="timer-next-user" class="text-muted" title="next person"></span>
     </div>
+
+    <div id="goal"></div>
 
     <div>
       <div class="mt-3" style="justify-content: center">
@@ -108,13 +110,43 @@
         </ul>
         </div>
 
+        <!--<button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#goalModal">🎯</button>-->
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">🎯</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#goalModal">Set new goal</a></li>
+            <li><a class="dropdown-item" onclick="deleteGoal()">Delete current goal</a></li>
+          </ul>
+        </div>
+
         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#configurationModal">⚙️</button>
       </div>
     </div>
 
+    <!-- Goal Modal -->
+    <div class="modal fade" id="goalModal" tabindex="-1" role="dialog" aria-labelledby="goalModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="goalModalLabel">Set a goal for your mob session</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="goalModalClose"></button>
+          </div>
+          <div class="modal-body">
+            <div class="input-group mb-3">
+              <span class="input-group-text">Set your goal</span>
+              <input type="text" class="form-control" placeholder="goal" id="goal-input">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveGoal()">Save goal</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
-    <!-- Modal -->
+    <!-- Setting Modal -->
     <div class="modal fade" id="configurationModal" tabindex="-1" role="dialog" aria-labelledby="configurationModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -234,6 +266,11 @@
           : date.toLocaleString();
     }
 
+    let goalDiv = document.getElementById('goal');
+    function updateGoal(data) {
+      goalDiv.innerText = data !== null ? `🎯 ${data}` : '';
+    }
+
     let timerDiv = document.getElementById('timer');
     function updateRemainingTime(data) {
       document.title = `${data} #${room}`;
@@ -320,6 +357,7 @@
     let requestUser = null;
     let requestNextUser = null;
     let requestTimer = null;
+    let goal = null;
 
 
     function renderTimer() {
@@ -495,6 +533,25 @@
       prependToHistory(timerRequest);
     });
 
+    eventSource.addEventListener('GOAL_REQUEST', (event) => {
+      console.log('handling event GOAL_REQUEST ' + event.data);
+      let goalRequest = JSON.parse(event.data);
+      let requested = goalRequest["requested"];
+      let newGoal = goalRequest["goal"];
+      let user = goalRequest["user"];
+
+      if (newGoal === null && user === null) {
+        console.log('Resetting state');
+
+        goal = null;
+        updateGoal(null);
+        return;
+      }
+
+      updateGoal(newGoal)
+      goal = newGoal;
+    });
+
     checkAudioPlayback();
 
     function sendTimer(type, timer, user) {
@@ -509,7 +566,49 @@
       xhr.send(json);
     }
 
+    function saveGoal() {
+      goalInput = document.getElementById('goal-input');
+      goalModalClose = document.getElementById('goalModalClose');
+      if(goalInput.value !== ""){
+        sendGoal(goalInput.value)
+        goalInput.value = ""
+        goalModalClose.click();
+      } else {
+        console.log("Did not save goal as goal was empty.")
+      }
+    }
 
+    function sendGoal(goal) {
+      let method = "PUT";
+      let url = "/" + room + "/goal";
+      const user = localStorage.getItem('user');
+      let json = `{"goal": "${goal}","user": "${user}"}`;
+
+      console.log(`${method} ${url} ${json}`)
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(json);
+    }
+
+    function deleteGoal(){
+      goalModalClose = document.getElementById('goalModalClose');
+      sendDeleteGoal();
+      goalModalClose.click();
+    }
+
+    function sendDeleteGoal() {
+      let method = "DELETE";
+      let url = "/" + room + "/goal";
+      let user = localStorage.getItem('user');
+      let json = `{"user": "${user}"}`;
+
+      console.log(`${method} ${url} ${json}`)
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(json);
+    }
 
     function syncAndSetInitialValue(inputElementId, storageId, defaultValue, onChange) {
       const callOnChange = () => {
