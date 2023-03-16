@@ -1,1 +1,0 @@
-./mvnw spring-boot:build-image && docker push simonharrer/mob-timer && ssh root@timer.mob.sh 'bash -s' < deploy
