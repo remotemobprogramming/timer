@@ -173,27 +173,9 @@
 
 </main>
 
-<footer class="text-center text-muted small mt-5">
-  <p>
-    <a href="#" onclick="enableAudio()" id="audio-interaction">Activate Audio</a>
-    <span id="audio-speaker" onclick="toggleAudio()"></span>
-    <a href="#" onclick="testAudio()" id="audio-test">Test Audio</a>
-    |
-    <a href="/help">Help</a>
-    |
-    <a href="/stats">Stats</a>
-    |
-    <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
-    |
-    <a href="https://mob.sh">mob.sh</a>
-  </p>
+<footer th:replace="~{fragments/footer}"></footer>
 
-  <p>
-    Crafted by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
-  </p>
-</footer>
-
-<div th:replace="fragments/github-corner"></div>
+<div th:replace="~{fragments/github-corner}"></div>
   <script src="/howler.min.js"></script>
   <script type="text/javascript">
     if ("Notification" in window) {

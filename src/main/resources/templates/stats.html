@@ -57,23 +57,9 @@
 
 </div>
 
-<footer class="text-center text-muted small mt-5">
-  <p>
-    <a href="/help">Help</a>
-    |
-    <a href="/stats">Stats</a>
-    |
-    <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
-    |
-    <a href="https://mob.sh">mob.sh</a>
-  </p>
+<footer th:replace="~{fragments/footer}"></footer>
 
-  <p>
-    Crafted by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
-  </p>
-</footer>
-
-<div th:replace="fragments/github-corner"></div>
+<div th:replace="~{fragments/github-corner}"></div>
 <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
 </body>

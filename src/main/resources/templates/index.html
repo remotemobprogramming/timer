@@ -44,28 +44,14 @@
 
     <p id="active-users"></p>
     <p id="active-timers"></p>
-  </main>
-  <footer class="text-center text-muted small mt-5">
     <p>
       <a href="https://apps.apple.com/us/app/mob-timer/id1594924856?mt=12&amp;itsct=apps_box_badge&amp;itscg=30200" style="display: inline-block; overflow: hidden; border-top-left-radius: 13px; border-top-right-radius: 13px; border-bottom-right-radius: 13px; border-bottom-left-radius: 13px; width: 175px; height: 58px;"><img src="/appstore.svg" alt="Download on the Mac App Store" style="border-top-left-radius: 13px; border-top-right-radius: 13px; border-bottom-right-radius: 13px; border-bottom-left-radius: 13px; width: 175px; height: 58px;"></a>
     </p>
-    <p>
-      <a href="/help">Help</a>
-      |
-      <a href="/stats">Stats</a>
-      |
-      <a href="https://github.com/remotemobprogramming/timer">View on Github</a>
-      |
-      <a href="https://mob.sh">mob.sh</a>
-    </p>
-
-    <p>
-      Crafted by <a href="https://twitter.com/simonharrer">Dr. Simon Harrer</a> &amp; <a href="https://twitter.com/jochen_christ">Jochen Christ</a>
-    </p>
-  </footer>
+  </main>
+  <footer th:replace="~{fragments/footer}"></footer>
 </div>
 
-<div th:replace="fragments/github-corner"></div>
+<div th:replace="~{fragments/github-corner}"></div>
   <script type="text/javascript">
     if ("Notification" in window) {
       Notification.requestPermission();
