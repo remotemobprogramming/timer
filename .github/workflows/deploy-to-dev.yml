@@ -3,7 +3,7 @@ on:
     branches:
       - 'main'
 
-name: Build Docker Image and Deploy to DEV
+name: Deploy to DEV
 jobs:
   test:
     uses: remotemobprogramming/timer/.github/workflows/test.yml@main
