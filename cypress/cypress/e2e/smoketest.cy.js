@@ -17,8 +17,8 @@ describe('Mob.sh Timer', () => {
   })
 
   it('stats page is available', () => {
-    cy.visit('https://timer.mob.sh/help' + roomId)
-    cy.contains('Help')
+    cy.visit('https://timer.mob.sh/stats')
+    cy.contains('Stats')
   })
 
   it('mob timer works', () => {
