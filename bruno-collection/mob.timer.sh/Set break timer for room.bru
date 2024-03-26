@@ -1,0 +1,28 @@
+meta {
+  name: Set break timer for room
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/{{roomId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "timer": {{timerInMinutes}},
+    "user": "{{user}}"
+  }
+}
+
+vars:pre-request {
+  roomId: test123
+  timerInMinutes: 10
+  user: TestUser
+}
+
+assert {
+  res.status: eq 202
+}
