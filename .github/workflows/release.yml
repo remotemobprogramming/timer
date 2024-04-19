@@ -27,7 +27,7 @@ jobs:
       - name: Docker Push Latest
         run: docker push remotemobprogramming/mob-timer:latest
       - name: Docker Push Version
-        run: docker push remotemobprogramming/mob-timer:${{ github.ref }}
+        run: docker push remotemobprogramming/mob-timer:${{ github.ref_name }}
       - name: Docker Push Hash
         run: docker push remotemobprogramming/mob-timer:${{ github.sha }}
   deployment:
