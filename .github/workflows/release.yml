@@ -22,8 +22,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker Build
         run: ./mvnw spring-boot:build-image
-      - name: Docker Tag
+      - name: Docker Tag Version
         run: docker tag remotemobprogramming/mob-timer remotemobprogramming/mob-timer:${{ github.sha }}
+      - name: Docker Tag Hash
+        run: docker tag remotemobprogramming/mob-timer remotemobprogramming/mob-timer:${{ github.ref_name }}
       - name: Docker Push Latest
         run: docker push remotemobprogramming/mob-timer:latest
       - name: Docker Push Version
