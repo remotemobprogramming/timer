@@ -31,6 +31,10 @@ public class RoomRepository {
         });
   }
 
+  void deleteAll(){
+    repository.clear();
+  }
+
   @Scheduled(fixedRateString = "PT1M")
   void cleanUpUnusedRooms() {
     repository.forEach((key, room) -> room.removeOldTimerRequests());

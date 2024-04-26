@@ -1,0 +1,15 @@
+meta {
+  name: Get goal for room
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/{{roomId}}/goal
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  roomId: test123
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Delete goal for room
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/{{roomId}}/goal
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user": "{{user}}"
+  }
+}
+
+vars:pre-request {
+  roomId: test123
+  user: TestUser
+}

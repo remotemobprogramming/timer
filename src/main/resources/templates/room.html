@@ -112,10 +112,15 @@
 
         <!--<button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#goalModal">🎯</button>-->
         <div class="btn-group">
-          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">🎯</button>
+          <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#goalModal">🎯</button>
+          <button type="button"
+                  class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#goalModal">Set new goal</a></li>
-            <li><a class="dropdown-item" onclick="deleteGoal()">Delete current goal</a></li>
+            <li><a class="dropdown-item" onclick="deleteGoal()">🗑️ Delete current goal</a></li>
           </ul>
         </div>
 
@@ -268,7 +273,8 @@
 
     let goalDiv = document.getElementById('goal');
     function updateGoal(data) {
-      goalDiv.innerText = data !== null ? `🎯 ${data}` : '';
+        goal = data;
+        goalDiv.innerText = data !== null ? `🎯 ${data}` : '';
     }
 
     let timerDiv = document.getElementById('timer');
@@ -540,16 +546,7 @@
       let newGoal = goalRequest["goal"];
       let user = goalRequest["user"];
 
-      if (newGoal === null && user === null) {
-        console.log('Resetting state');
-
-        goal = null;
-        updateGoal(null);
-        return;
-      }
-
       updateGoal(newGoal)
-      goal = newGoal;
     });
 
     checkAudioPlayback();

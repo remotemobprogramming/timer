@@ -19,7 +19,6 @@ import sh.mob.timer.web.Room.TimerRequest;
 @RequestMapping()
 public class RoomApiController {
 
-  private static final String SMOKETEST_ROOM_NAME = "testroom-310a9c47-515c-4ad7-a229-ae8efbab7387";
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
   private final RoomRepository roomRepository;
   private final Clock clock;
@@ -84,7 +83,7 @@ public class RoomApiController {
           timerRequest.timer,
           timerRequest.user,
           room.name());
-      incrementTimerStatsExceptForTestRoom(room, timer);
+      stats.incrementTimer(room.name(), timer);
     } else if (timerRequest.breaktimer() != null) {
       long breaktimer = truncateTooLongTimers(timerRequest.breaktimer());
       room.addBreaktimer(breaktimer, timerRequest.user());
@@ -93,7 +92,7 @@ public class RoomApiController {
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
-      incrementBreakTimerStatsExceptForTestRoom(room, breaktimer);
+      stats.incrementBreaktimer(room.name(), breaktimer);
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
     }
@@ -112,6 +111,7 @@ public class RoomApiController {
               goalRequest.goal(),
               goalRequest.user(),
               room.name());
+      stats.incrementGoalCount(room.name());
     } else {
       log.warn("Could not understand PUT goal request for room {}", roomId);
     }
@@ -119,28 +119,19 @@ public class RoomApiController {
 
   @DeleteMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public void putGoal(@PathVariable String roomId, @RequestBody DeleteGoalRequest deleteGoalRequest) {
+  public void deleteGoal(@PathVariable String roomId, @RequestBody DeleteGoalRequest deleteGoalRequest) {
     var room = roomRepository.get(roomId);
-    room.deleteGoal(deleteGoalRequest.user());
+    room.deleteGoal(deleteGoalRequest.user(), Instant.now(clock));
   }
 
   @GetMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
-  @ResponseStatus(HttpStatus.ACCEPTED)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public ResponseEntity<GoalResponse> getGoal(@PathVariable String roomId) {
     var room = roomRepository.get(roomId);
+    if (!room.hasGoal()){
+      return ResponseEntity.noContent().build();
+    }
     return ResponseEntity.ofNullable(GoalResponse.of(room.currentGoal()));
-  }
-
-  private void incrementBreakTimerStatsExceptForTestRoom(Room room, long breaktimer) {
-    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
-      stats.incrementBreaktimer(breaktimer);
-    }
-  }
-
-  private void incrementTimerStatsExceptForTestRoom(Room room, long timer) {
-    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
-      stats.incrementTimer(timer);
-    }
   }
 
   private static long truncateTooLongTimers(Long timer) {
@@ -159,69 +150,5 @@ public class RoomApiController {
 
   public record PutGoalRequest(String goal, String user){}
   public record DeleteGoalRequest(String user){}
-  static final class PutTimerRequest {
-
-    private final Long timer;
-    private final Long breaktimer;
-    private final String user;
-
-    PutTimerRequest(Long timer, Long breaktimer, String user) {
-      this.timer = timer;
-      this.user = user;
-      this.breaktimer = breaktimer;
-    }
-
-    public Long timer() {
-      return timer;
-    }
-
-    public Long breaktimer() {
-      return breaktimer;
-    }
-
-    public String user() {
-      return user;
-    }
-
-    public Long getTimer() {
-      return timer;
-    }
-
-    public Long getBreaktimer() {
-      return breaktimer;
-    }
-
-    public String getUser() {
-      return user;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) return true;
-      if (obj == null || obj.getClass() != this.getClass()) return false;
-      var that = (PutTimerRequest) obj;
-      return Objects.equals(this.timer, that.timer)
-          && Objects.equals(this.breaktimer, that.breaktimer)
-          && Objects.equals(this.user, that.user);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(timer, breaktimer, user);
-    }
-
-    @Override
-    public String toString() {
-      return "PutTimerRequest["
-          + "timer="
-          + timer
-          + ", "
-          + "breaktimer="
-          + breaktimer
-          + ", "
-          + "user="
-          + user
-          + ']';
-    }
-  }
+  public record PutTimerRequest(Long timer, Long breaktimer, String user){}
 }
