@@ -21,19 +21,43 @@ final class Room {
   public static final TimerRequest NULL_TIMER_REQUEST =
       new TimerRequest(0L, null, null, null, null);
   private final String name;
+
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
-  private final Sinks.Many<TimerRequest> sink =
+  private final Sinks.Many<TimerRequest> timerRequestSink =
       Sinks.many().replay().latestOrDefault(NULL_TIMER_REQUEST);
+
+  private Goal currentGoal = Goal.NO_GOAL;
+  private final Sinks.Many<Goal> goalRequestSink =
+      Sinks.many().replay().latestOrDefault(Goal.NO_GOAL);
 
   Room(String name) {
     this.name = name;
   }
 
-  public void add(Long timer, String user, Instant requested) {
+  public void addTimer(Long timer, String user, Instant requested) {
     var nextUser = findNextUser(user);
     var timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
-    sink.tryEmitNext(timerRequest);
+    timerRequestSink.tryEmitNext(timerRequest);
+  }
+
+  public void setGoal(String text, String user, Instant requested) {
+    var newGoal = new Goal(text, user, requested);
+    currentGoal = newGoal ;
+    goalRequestSink.tryEmitNext(newGoal);
+  }
+
+  public void deleteGoal(String user, Instant requested) {
+    if(currentGoal.goal() != null){
+      currentGoal = Goal.deleted(user, requested);
+      goalRequestSink.tryEmitNext(currentGoal);
+      log.info(
+              "Delete current goal by user {} for room {}",
+              user,
+              name);
+    } else {
+      log.info("Try to delete current goal by user {} for room {}, but there is no current goal.", user, name);
+    }
   }
 
   private String findNextUser(String user) {
@@ -70,11 +94,15 @@ final class Room {
             lastTimerRequest().map(TimerRequest::getNextUser).orElse(null),
             TimerType.BREAKTIMER);
     timerRequests.add(timerRequest);
-    sink.tryEmitNext(timerRequest);
+    timerRequestSink.tryEmitNext(timerRequest);
   }
 
-  public Sinks.Many<TimerRequest> sink() {
-    return sink;
+  public Sinks.Many<TimerRequest> timerRequestSink() {
+    return timerRequestSink;
+  }
+
+  public Sinks.Many<Goal> goalRequestSink() {
+    return goalRequestSink;
   }
 
   Optional<TimerRequest> lastTimerRequest() {
@@ -89,13 +117,21 @@ final class Room {
     this.timerRequests.removeIf(
         timerRequest -> now.minus(24, HOURS).isAfter(timerRequest.getRequested()));
     if (timerRequests.isEmpty()) {
-      sink.tryEmitNext(NULL_TIMER_REQUEST);
+      timerRequestSink.tryEmitNext(NULL_TIMER_REQUEST);
       log.info("Emptied room {}", name);
     }
   }
 
   public String name() {
     return name;
+  }
+
+  public Goal currentGoal() {
+    return currentGoal;
+  }
+
+  public boolean hasGoal() {
+    return currentGoal.goal != null;
   }
 
   public List<TimerRequest> historyWithoutLatest() {
@@ -115,6 +151,14 @@ final class Room {
         && timerRequest.getTimer() > 0
         && timerRequest.getRequested() != null
         && timerRequest.getRequested().plus(timerRequest.getTimer(), MINUTES).isAfter(now);
+  }
+
+  public record Goal(String goal, String user, Instant requested){
+    public static final Goal NO_GOAL = new Goal(null, null, null);
+
+    public static Goal deleted(String user, Instant requested){
+      return new Goal(null, user, requested);
+    }
   }
 
   public static final class TimerRequest {

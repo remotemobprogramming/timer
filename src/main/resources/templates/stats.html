@@ -53,6 +53,12 @@
       <td th:text="${entry.value}">3</td></td>
     </tr>
     </tbody>
+    <thead>
+    <tr>
+      <th>Number of goals set</th>
+      <td th:text="${stats.getGoalCount()}">1</td>
+    </tr>
+    </thead>
   </table>
 
 </div>

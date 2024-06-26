@@ -8,15 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import sh.mob.timer.web.Room.TimerRequest;
 
@@ -24,7 +19,6 @@ import sh.mob.timer.web.Room.TimerRequest;
 @RequestMapping()
 public class RoomApiController {
 
-  private static final String SMOKETEST_ROOM_NAME = "testroom-310a9c47-515c-4ad7-a229-ae8efbab7387";
   private static final Logger log = LoggerFactory.getLogger(RoomApiController.class);
   private final RoomRepository roomRepository;
   private final Clock clock;
@@ -50,11 +44,17 @@ public class RoomApiController {
     var room = roomRepository.get(roomId);
 
     var timerRequestFlux =
-        room.sink()
+        room.timerRequestSink()
             .asFlux()
             .map(
                 timerRequest ->
                     ServerSentEvent.builder().event("TIMER_REQUEST").data(timerRequest).build());
+    var goalRequestFlux =
+        room.goalRequestSink()
+            .asFlux()
+            .map(
+                goalRequest ->
+                    ServerSentEvent.builder().event("GOAL_REQUEST").data(goalRequest).build());
     var keepAliveFlux =
         Flux.interval(Duration.ofSeconds(5L))
             .map(
@@ -67,7 +67,7 @@ public class RoomApiController {
         Flux.just(room.historyWithoutLatest())
             .map(list -> ServerSentEvent.builder().event("INITIAL_HISTORY").data(list).build());
 
-    return Flux.concat(initialHistory, keepAliveFlux.mergeWith(timerRequestFlux));
+    return Flux.concat(initialHistory, keepAliveFlux.mergeWith(timerRequestFlux).mergeWith(goalRequestFlux));
   }
 
   @PutMapping("/{roomId:[A-Za-z0-9-_]+}")
@@ -76,14 +76,14 @@ public class RoomApiController {
     var room = roomRepository.get(roomId);
     if (timerRequest.timer() != null) {
       long timer = truncateTooLongTimers(timerRequest.timer());
-      room.add(
+      room.addTimer(
           timer, timerRequest.user(), Instant.now(clock));
       log.info(
           "Add timer {} by user {} for room {}",
           timerRequest.timer,
           timerRequest.user,
           room.name());
-      incrementTimerStatsExceptForTestRoom(room, timer);
+      stats.incrementTimer(room.name(), timer);
     } else if (timerRequest.breaktimer() != null) {
       long breaktimer = truncateTooLongTimers(timerRequest.breaktimer());
       room.addBreaktimer(breaktimer, timerRequest.user());
@@ -92,91 +92,63 @@ public class RoomApiController {
           timerRequest.breaktimer(),
           timerRequest.user,
           room.name());
-      incrementBreakTimerStatsExceptForTestRoom(room, breaktimer);
+      stats.incrementBreaktimer(room.name(), breaktimer);
     } else {
       log.warn("Could not understand PUT request for room {}", roomId);
     }
   }
 
-  private void incrementBreakTimerStatsExceptForTestRoom(Room room, long breaktimer) {
-    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
-      stats.incrementBreaktimer(breaktimer);
+  @PutMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public void putGoal(@PathVariable String roomId, @RequestBody PutGoalRequest goalRequest) {
+    var room = roomRepository.get(roomId);
+    if (goalRequest.goal() != null) {
+      String goal = truncateTooLongGoal(goalRequest.goal());
+      room.setGoal(
+              goal, goalRequest.user(), Instant.now(clock));
+      log.info(
+              "Add goal \"{}\" by user {} for room {}",
+              goalRequest.goal(),
+              goalRequest.user(),
+              room.name());
+      stats.incrementGoalCount(room.name());
+    } else {
+      log.warn("Could not understand PUT goal request for room {}", roomId);
     }
   }
 
-  private void incrementTimerStatsExceptForTestRoom(Room room, long timer) {
-    if (!Objects.equals(room.name(), SMOKETEST_ROOM_NAME)) {
-      stats.incrementTimer(timer);
+  @DeleteMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public void deleteGoal(@PathVariable String roomId, @RequestBody DeleteGoalRequest deleteGoalRequest) {
+    var room = roomRepository.get(roomId);
+    room.deleteGoal(deleteGoalRequest.user(), Instant.now(clock));
+  }
+
+  @GetMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<GoalResponse> getGoal(@PathVariable String roomId) {
+    var room = roomRepository.get(roomId);
+    if (!room.hasGoal()){
+      return ResponseEntity.noContent().build();
     }
+    return ResponseEntity.ofNullable(GoalResponse.of(room.currentGoal()));
   }
 
   private static long truncateTooLongTimers(Long timer) {
     return Math.min(60 * 24, Math.max(0, timer));
   }
 
-  static final class PutTimerRequest {
+  private static String truncateTooLongGoal(String goal) {
+    return goal.length() > 256 ? goal.substring(0,256-1-3) + "...": goal;
+  }
 
-    private final Long timer;
-    private final Long breaktimer;
-    private final String user;
-
-    PutTimerRequest(Long timer, Long breaktimer, String user) {
-      this.timer = timer;
-      this.user = user;
-      this.breaktimer = breaktimer;
-    }
-
-    public Long timer() {
-      return timer;
-    }
-
-    public Long breaktimer() {
-      return breaktimer;
-    }
-
-    public String user() {
-      return user;
-    }
-
-    public Long getTimer() {
-      return timer;
-    }
-
-    public Long getBreaktimer() {
-      return breaktimer;
-    }
-
-    public String getUser() {
-      return user;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) return true;
-      if (obj == null || obj.getClass() != this.getClass()) return false;
-      var that = (PutTimerRequest) obj;
-      return Objects.equals(this.timer, that.timer)
-          && Objects.equals(this.breaktimer, that.breaktimer)
-          && Objects.equals(this.user, that.user);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(timer, breaktimer, user);
-    }
-
-    @Override
-    public String toString() {
-      return "PutTimerRequest["
-          + "timer="
-          + timer
-          + ", "
-          + "breaktimer="
-          + breaktimer
-          + ", "
-          + "user="
-          + user
-          + ']';
+  public record GoalResponse(String goal){
+    public static GoalResponse of(Room.Goal goal){
+      return new GoalResponse(goal.goal());
     }
   }
+
+  public record PutGoalRequest(String goal, String user){}
+  public record DeleteGoalRequest(String user){}
+  public record PutTimerRequest(Long timer, Long breaktimer, String user){}
 }

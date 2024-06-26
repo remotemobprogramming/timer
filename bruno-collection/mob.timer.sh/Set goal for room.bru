@@ -1,0 +1,24 @@
+meta {
+  name: Set goal for room
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/{{roomId}}/goal
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "goal": "{{goal}}",
+    "user": "{{user}}"
+  }
+}
+
+vars:pre-request {
+  roomId: test123
+  user: TestUser
+  goal: This is an awesome goal!
+}
