@@ -397,7 +397,7 @@
     let faviconCanvasContext = faviconCanvas.getContext('2d');
     let faviconSize = Math.min(faviconCanvas.width, faviconCanvas.height);
     function renderTimerFavicon() {
-      if (!faviconCanvasContext || !timerDurationInMilliseconds || !faviconLink) {
+      if (!faviconCanvasContext || !requestedTimestamp || !timerDurationInMilliseconds || !faviconLink) {
         return;
       }
 
