@@ -210,6 +210,7 @@
 
 </main>
 
+<canvas id="favicon-canvas" width="64" height="64" hidden></canvas>
 <footer th:replace="~{fragments/footer}"></footer>
 
 <div th:replace="~{fragments/github-corner}"></div>
@@ -390,10 +391,44 @@
       }
     }
 
+    let faviconLink = document.querySelector("link[rel='icon']");
+    let faviconUri = faviconLink.getAttribute('href');
+    let faviconCanvas = document.getElementById('favicon-canvas');
+    let faviconCanvasContext = faviconCanvas.getContext('2d');
+    let faviconSize = Math.min(faviconCanvas.width, faviconCanvas.height);
+    function renderTimerFavicon() {
+      if (!faviconCanvasContext || !timerDurationInMilliseconds || !faviconLink) {
+        return;
+      }
+
+      let elapsedMillisecondsSinceRequested = Date.now() - requestedTimestamp;
+      if (elapsedMillisecondsSinceRequested < timerDurationInMilliseconds) {
+        let elapsedTimerFraction = Math.max(0.05, elapsedMillisecondsSinceRequested / timerDurationInMilliseconds);
+        let startAngle = -Math.PI / 2;
+
+        faviconCanvasContext.clearRect(0, 0, faviconSize, faviconSize);
+        faviconCanvasContext.fillStyle = requestType === 'BREAKTIMER' ? 'red' : 'green';
+        faviconCanvasContext.beginPath();
+        faviconCanvasContext.moveTo(faviconSize / 2, faviconSize / 2);
+        faviconCanvasContext.arc(faviconSize / 2,
+                                 faviconSize / 2,
+                                 faviconSize / 2,
+                                 startAngle,
+                                 startAngle + (2 * Math.PI * elapsedTimerFraction));
+        faviconCanvasContext.lineTo(faviconSize / 2, faviconSize / 2);
+        faviconCanvasContext.fill();
+
+        faviconLink.href = faviconCanvas.toDataURL('image/png');
+      } else {
+        faviconLink.href = faviconUri;
+      }
+    }
+
     // loop
     function timer() {
       setTimeout(function () {
         renderTimer();
+        renderTimerFavicon();
         timer();
       }, 50);
     }
