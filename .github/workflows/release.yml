@@ -46,3 +46,5 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_AUTH_TOKEN}}
           heroku_app_name: ${{ secrets.HEROKU_APP_NAME_PROD }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
+        env:
+          HEROKU_API_KEY: ${{secrets.HEROKU_AUTH_TOKEN}}
