@@ -14,12 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Heroku CLI
-        run: curl https://cli-assets.heroku.com/install.sh | sh
-      - uses: akhileshns/heroku-deploy@v3.15.15
         with:
-          heroku_api_key: ${{secrets.HEROKU_AUTH_TOKEN}}
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_DEV }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-        env:
-          HEROKU_API_KEY: ${{secrets.HEROKU_AUTH_TOKEN}}
+          fetch-depth: 0
+      - name: Deploy to Heroku
+        run: |
+          gem install dpl
+          dpl --provider=heroku --app=${{ secrets.HEROKU_APP_NAME_DEV }} --api-key=${{ secrets.HEROKU_AUTH_TOKEN }}
