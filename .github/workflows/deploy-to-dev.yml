@@ -19,6 +19,7 @@ jobs:
       - name: Deploy to Heroku
         run: |
           export GEM_HOME="$HOME/.gem"
+          export BUNDLE_PATH="$HOME/.bundle"
           export PATH="$GEM_HOME/bin:$PATH"
           gem install dpl
           dpl --provider=heroku --app=${{ secrets.HEROKU_APP_NAME_DEV }} --api-key=${{ secrets.HEROKU_AUTH_TOKEN }}
