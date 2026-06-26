@@ -18,5 +18,5 @@ jobs:
           fetch-depth: 0
       - name: Deploy to Heroku
         run: |
-          gem install dpl
+          sudo gem install dpl
           dpl --provider=heroku --app=${{ secrets.HEROKU_APP_NAME_DEV }} --api-key=${{ secrets.HEROKU_AUTH_TOKEN }}
