@@ -23,10 +23,10 @@ describe('Mob.sh Timer', () => {
 
   it('mob timer works', () => {
     cy.visit('https://timer.mob.sh/' + roomId)
-    cy.get('[data-bs-toggle="modal"]').click()
+    cy.get('[data-bs-target="#configurationModal"]').click()
     cy.get('#timer-input').clear().type("1")
     cy.wait(200)
-    cy.get('.btn-close').click()
+    cy.get('#configurationModal > .modal-dialog > .modal-content > .modal-header > .btn-close').click()
     cy.get('#timer-button').contains(1).click()
     cy.get('#timer').should('not.contain', '00:00')
     cy.get('#timer-type').should('not.contain', '☕')
@@ -34,10 +34,10 @@ describe('Mob.sh Timer', () => {
 
   it('break timer works', () => {
     cy.visit('https://timer.mob.sh/' + roomId)
-    cy.get('[data-bs-toggle="modal"]').click()
+    cy.get('[data-bs-target="#configurationModal"]').click()
     cy.get('#breaktimer-input').clear().type("1")
     cy.wait(200)
-    cy.get('.btn-close').click()
+    cy.get('#configurationModal > .modal-dialog > .modal-content > .modal-header > .btn-close').click()
     cy.get('#breaktimer-button').contains(1).click()
     cy.get('#timer').should('not.contain', '00:00')
     cy.get('#timer-type').contains('☕')
