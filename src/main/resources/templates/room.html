@@ -554,7 +554,7 @@
     function sendTimer(type, timer, user) {
       let method = "PUT";
       let url = "/" + room;
-      let json = `{"${type}": ${timer},"user": "${user}"}`;
+      let json = JSON.stringify({ [type]: timer, user: user });
 
       console.log(`${method} ${url} ${json}`)
       var xhr = new XMLHttpRequest();
@@ -579,7 +579,7 @@
       let method = "PUT";
       let url = "/" + room + "/goal";
       const user = localStorage.getItem('user');
-      let json = `{"goal": "${goal}","user": "${user}"}`;
+      let json = JSON.stringify({ goal: goal, user: user });
 
       console.log(`${method} ${url} ${json}`)
       var xhr = new XMLHttpRequest();
@@ -598,7 +598,7 @@
       let method = "DELETE";
       let url = "/" + room + "/goal";
       let user = localStorage.getItem('user');
-      let json = `{"user": "${user}"}`;
+      let json = JSON.stringify({ user: user });
 
       console.log(`${method} ${url} ${json}`)
       var xhr = new XMLHttpRequest();

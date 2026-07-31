@@ -81,7 +81,7 @@ public class RoomApiController {
       log.info(
           "Add timer {} by user {} for room {}",
           timerRequest.timer,
-          timerRequest.user,
+          sanitizeForLog(timerRequest.user),
           room.name());
       stats.incrementTimer(room.name(), timer);
     } else if (timerRequest.breaktimer() != null) {
@@ -90,7 +90,7 @@ public class RoomApiController {
       log.info(
           "Add break timer {} by user {} for room {}",
           timerRequest.breaktimer(),
-          timerRequest.user,
+          sanitizeForLog(timerRequest.user),
           room.name());
       stats.incrementBreaktimer(room.name(), breaktimer);
     } else {
@@ -108,8 +108,8 @@ public class RoomApiController {
               goal, goalRequest.user(), Instant.now(clock));
       log.info(
               "Add goal \"{}\" by user {} for room {}",
-              goalRequest.goal(),
-              goalRequest.user(),
+              sanitizeForLog(goalRequest.goal()),
+              sanitizeForLog(goalRequest.user()),
               room.name());
       stats.incrementGoalCount(room.name());
     } else {
@@ -132,6 +132,13 @@ public class RoomApiController {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ofNullable(GoalResponse.of(room.currentGoal()));
+  }
+
+  private static String sanitizeForLog(String value) {
+    if (value == null) {
+      return null;
+    }
+    return value.replaceAll("[\\r\\n]", "_");
   }
 
   private static long truncateTooLongTimers(Long timer) {
