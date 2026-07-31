@@ -82,7 +82,7 @@
       } else {
         text = "";
       }
-      document.getElementById('active-users').innerHTML = text;
+      document.getElementById('active-users').textContent = text;
     });
     eventSource.addEventListener('ACTIVE_TIMERS_UPDATE', (e) => {
       console.log("Updating active timers " + e.data)
@@ -97,7 +97,7 @@
       } else {
         text = "";
       }
-      document.getElementById('active-timers').innerHTML = text;
+      document.getElementById('active-timers').textContent = text;
     });
   </script>
 </body>
