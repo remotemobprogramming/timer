@@ -22,6 +22,9 @@ final class Room {
   /** The only definition of what constitutes a valid room name. */
   public static final String NAME_REGEX = "[A-Za-z0-9-_]{1,64}";
 
+  /** User names are stored per timer request and broadcast to every SSE client. */
+  public static final int MAX_USER_LENGTH = 100;
+
   public static final TimerRequest NULL_TIMER_REQUEST =
       new TimerRequest(0L, null, null, null, null);
   private final String name;
@@ -46,6 +49,7 @@ final class Room {
   }
 
   public void addTimer(Long timer, String user, Instant requested) {
+    user = truncateTooLongUser(user);
     var nextUser = findNextUser(user);
     var timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
@@ -55,13 +59,14 @@ final class Room {
   }
 
   public void setGoal(String text, String user, Instant requested) {
-    var newGoal = new Goal(text, user, requested);
+    var newGoal = new Goal(text, truncateTooLongUser(user), requested);
     currentGoal = newGoal ;
     lastActivity = requested;
     goalRequestSink.tryEmitNext(newGoal);
   }
 
   public void deleteGoal(String user, Instant requested) {
+    user = truncateTooLongUser(user);
     lastActivity = requested;
     if(currentGoal.goal() != null){
       currentGoal = Goal.deleted(user, requested);
@@ -73,6 +78,13 @@ final class Room {
     } else {
       log.info("Try to delete current goal by user {} for room {}, but there is no current goal.", user, name);
     }
+  }
+
+  private static String truncateTooLongUser(String user) {
+    if (user == null || user.length() <= MAX_USER_LENGTH) {
+      return user;
+    }
+    return user.substring(0, MAX_USER_LENGTH);
   }
 
   private String findNextUser(String user) {
@@ -101,6 +113,7 @@ final class Room {
   }
 
   public void addBreaktimer(Long breaktimer, String user) {
+    user = truncateTooLongUser(user);
     TimerRequest timerRequest =
         new TimerRequest(
             breaktimer,
