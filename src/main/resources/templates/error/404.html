@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="/bootstrap.min.css" rel="stylesheet">
+  <script src="/bootstrap.bundle.min.js"></script>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <title>Mob Timer</title>
+  <script src="/darkmode.js"></script>
+</head>
+<body>
+
+<div class="col-lg-8 mx-auto p-3 py-md-5">
+  <main class="text-center">
+    <a class="text-decoration-none" href="/"><h1>Mob Timer</h1></a>
+
+    <div class="alert alert-warning mt-5" role="alert">
+      <h4 class="alert-heading">Page not found</h4>
+      <p>This page does not exist. Room names may only contain letters, digits, <code>-</code> and <code>_</code> and must be at most 64 characters long.</p>
+    </div>
+
+    <a class="btn btn-primary" href="/">Back to start page</a>
+  </main>
+  <footer th:replace="~{fragments/footer}"></footer>
+</div>
+
+<div th:replace="~{fragments/github-corner}"></div>
+</body>
+</html>

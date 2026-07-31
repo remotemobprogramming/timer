@@ -19,6 +19,9 @@ final class Room {
 
   private static final Logger log = LoggerFactory.getLogger(Room.class);
 
+  /** The only definition of what constitutes a valid room name. */
+  public static final String NAME_REGEX = "[A-Za-z0-9-_]{1,64}";
+
   public static final TimerRequest NULL_TIMER_REQUEST =
       new TimerRequest(0L, null, null, null, null);
   private final String name;

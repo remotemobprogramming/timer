@@ -19,7 +19,7 @@ public class RoomController {
   }
 
   @GetMapping
-  @RequestMapping(value = "/{roomId:[A-Za-z0-9-_]{1,64}}")
+  @RequestMapping(value = "/{roomId:" + Room.NAME_REGEX + "}")
   public String get(@PathVariable String roomId, Model model) {
     model.addAttribute("room", roomRepository.get(roomId));
     return "room";
