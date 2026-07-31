@@ -1,10 +1,13 @@
 package sh.mob.timer.web;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
 public class RoomController {
@@ -16,9 +19,15 @@ public class RoomController {
   }
 
   @GetMapping
-  @RequestMapping(value = "/{roomId:[A-Za-z0-9-_]+}")
+  @RequestMapping(value = "/{roomId:[A-Za-z0-9-_]{1,64}}")
   public String get(@PathVariable String roomId, Model model) {
     model.addAttribute("room", roomRepository.get(roomId));
     return "room";
+  }
+
+  @ExceptionHandler(TooManyRoomsException.class)
+  @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+  public String handleTooManyRooms() {
+    return "room-limit";
   }
 }

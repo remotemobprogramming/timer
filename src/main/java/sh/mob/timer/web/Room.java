@@ -3,6 +3,7 @@ package sh.mob.timer.web;
 import static java.time.temporal.ChronoUnit.*;
 import static java.util.function.Predicate.not;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +22,8 @@ final class Room {
   public static final TimerRequest NULL_TIMER_REQUEST =
       new TimerRequest(0L, null, null, null, null);
   private final String name;
+  private final int maxTimerRequests;
+  private final Duration timerRequestRetention;
 
   private final List<TimerRequest> timerRequests = new CopyOnWriteArrayList<>();
   private final Sinks.Many<TimerRequest> timerRequestSink =
@@ -30,24 +33,33 @@ final class Room {
   private final Sinks.Many<Goal> goalRequestSink =
       Sinks.many().replay().latestOrDefault(Goal.NO_GOAL);
 
-  Room(String name) {
+  private volatile Instant lastActivity;
+
+  Room(String name, int maxTimerRequests, Duration timerRequestRetention) {
     this.name = name;
+    this.maxTimerRequests = maxTimerRequests;
+    this.timerRequestRetention = timerRequestRetention;
+    this.lastActivity = Instant.now();
   }
 
   public void addTimer(Long timer, String user, Instant requested) {
     var nextUser = findNextUser(user);
     var timerRequest = new TimerRequest(timer, requested, user, nextUser, TimerType.TIMER);
     timerRequests.add(timerRequest);
+    dropOldestTimerRequestsOverLimit();
+    lastActivity = requested;
     timerRequestSink.tryEmitNext(timerRequest);
   }
 
   public void setGoal(String text, String user, Instant requested) {
     var newGoal = new Goal(text, user, requested);
     currentGoal = newGoal ;
+    lastActivity = requested;
     goalRequestSink.tryEmitNext(newGoal);
   }
 
   public void deleteGoal(String user, Instant requested) {
+    lastActivity = requested;
     if(currentGoal.goal() != null){
       currentGoal = Goal.deleted(user, requested);
       goalRequestSink.tryEmitNext(currentGoal);
@@ -94,7 +106,15 @@ final class Room {
             lastTimerRequest().map(TimerRequest::getNextUser).orElse(null),
             TimerType.BREAKTIMER);
     timerRequests.add(timerRequest);
+    dropOldestTimerRequestsOverLimit();
+    lastActivity = timerRequest.getRequested();
     timerRequestSink.tryEmitNext(timerRequest);
+  }
+
+  private void dropOldestTimerRequestsOverLimit() {
+    while (timerRequests.size() > maxTimerRequests) {
+      timerRequests.remove(0);
+    }
   }
 
   public Sinks.Many<TimerRequest> timerRequestSink() {
@@ -115,7 +135,7 @@ final class Room {
   public void removeOldTimerRequests() {
     var now = Instant.now();
     this.timerRequests.removeIf(
-        timerRequest -> now.minus(24, HOURS).isAfter(timerRequest.getRequested()));
+        timerRequest -> now.minus(timerRequestRetention).isAfter(timerRequest.getRequested()));
     if (timerRequests.isEmpty()) {
       timerRequestSink.tryEmitNext(NULL_TIMER_REQUEST);
       log.info("Emptied room {}", name);
@@ -124,6 +144,18 @@ final class Room {
 
   public String name() {
     return name;
+  }
+
+  public Instant lastActivity() {
+    return lastActivity;
+  }
+
+  public boolean isUnused(Instant now, Duration emptyRoomGrace, Duration roomRetention) {
+    if (timerRequestSink.currentSubscriberCount() > 0 || !timerRequests.isEmpty()) {
+      return false;
+    }
+    var idleFor = hasGoal() ? roomRetention : emptyRoomGrace;
+    return lastActivity.plus(idleFor).isBefore(now);
   }
 
   public Goal currentGoal() {

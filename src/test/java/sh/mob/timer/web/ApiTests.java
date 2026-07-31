@@ -59,6 +59,11 @@ class ApiTests {
   }
 
   @Test
+  void getRoomWithTooLongNameIsNotFound() {
+    webTestClient.get().uri("/" + "a".repeat(65)).exchange().expectStatus().isNotFound();
+  }
+
+  @Test
   void putTimer() {
     var now = "2020-01-24T06:00:00Z";
     Mockito.when(clock.instant()).thenReturn(Instant.parse(now));

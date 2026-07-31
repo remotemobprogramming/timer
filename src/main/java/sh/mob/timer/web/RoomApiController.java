@@ -32,7 +32,7 @@ public class RoomApiController {
 
   @GetMapping
   @RequestMapping(
-      value = "/{roomId:[A-Za-z0-9-_]+}/events",
+      value = "/{roomId:[A-Za-z0-9-_]{1,64}}/events",
       produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public Flux<ServerSentEvent<Object>> getEventStream(
       @PathVariable String roomId, ServerHttpResponse response) {
@@ -70,7 +70,7 @@ public class RoomApiController {
     return Flux.concat(initialHistory, keepAliveFlux.mergeWith(timerRequestFlux).mergeWith(goalRequestFlux));
   }
 
-  @PutMapping("/{roomId:[A-Za-z0-9-_]+}")
+  @PutMapping("/{roomId:[A-Za-z0-9-_]{1,64}}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void publishEvent(@PathVariable String roomId, @RequestBody PutTimerRequest timerRequest) {
     var room = roomRepository.get(roomId);
@@ -98,7 +98,7 @@ public class RoomApiController {
     }
   }
 
-  @PutMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @PutMapping("/{roomId:[A-Za-z0-9-_]{1,64}}/goal")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void putGoal(@PathVariable String roomId, @RequestBody PutGoalRequest goalRequest) {
     var room = roomRepository.get(roomId);
@@ -117,14 +117,14 @@ public class RoomApiController {
     }
   }
 
-  @DeleteMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @DeleteMapping("/{roomId:[A-Za-z0-9-_]{1,64}}/goal")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void deleteGoal(@PathVariable String roomId, @RequestBody DeleteGoalRequest deleteGoalRequest) {
     var room = roomRepository.get(roomId);
     room.deleteGoal(deleteGoalRequest.user(), Instant.now(clock));
   }
 
-  @GetMapping("/{roomId:[A-Za-z0-9-_]+}/goal")
+  @GetMapping("/{roomId:[A-Za-z0-9-_]{1,64}}/goal")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public ResponseEntity<GoalResponse> getGoal(@PathVariable String roomId) {
     var room = roomRepository.get(roomId);
